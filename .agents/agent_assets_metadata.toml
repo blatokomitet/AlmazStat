@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "vje8pQIjBKIZWuGcLwTK8"
+uri = "file://screenshots/almazstat-fixture-1520863.png"
+type = "image"
+title = "AlmazStat — fixture 1520863"
+description = "Мобильный preview с реальными данными API-Football для Criciuma — Juventude."
+logical_id = "6263b8be-509a-4e7e-aa81-85932d24b55d"
+content_hash = "sha256:c57e94422111d459644686cfdae9c541d70bc7fccb85078ba65f6b551468658f"
+size = 128004
+mtime_ms = 1788990175312
+storage_uri = "gcs://replit-rams-assets-kira/rams/assets/repl:8e15cde6-489c-49c7-9a06-bba9be55e0a9/6263b8be-509a-4e7e-aa81-85932d24b55d/e17921c2-38e7-4998-9f67-f33e2fc5c518"
+storage_version_token = "1788990192275317"
+content_type = "image/png"

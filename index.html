@@ -6,118 +6,209 @@
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#101218" />
+    <meta name="theme-color" content="#08090d" />
     <meta
       name="description"
-      content="AlmazStat — фундамент Telegram Mini App для футбольной аналитики"
+      content="AlmazStat — Football Intelligence в Telegram"
     />
     <link
       rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23191c24'/%3E%3Ctext x='32' y='39' text-anchor='middle' font-family='Arial' font-size='21' font-weight='700' fill='%23d8a85b'%3EAS%3C/text%3E%3C/svg%3E"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23101219'/%3E%3Cpath d='M32 11 51 32 32 53 13 32Z' fill='none' stroke='%238b72ff' stroke-width='5'/%3E%3C/svg%3E"
     />
-    <title>AlmazStat</title>
+    <title>AlmazStat — Football Intelligence</title>
     <link rel="stylesheet" href="/style.css" />
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="/app.js" defer></script>
   </head>
   <body>
-    <div class="app-shell">
-      <header class="app-header">
-        <div class="brand-mark" aria-hidden="true">AS</div>
-        <div>
-          <p class="brand-name">AlmazStat</p>
-          <p class="brand-caption">Football analytics</p>
+    <main class="app">
+      <header class="header">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div>
+            <div class="brand-name">AlmazStat</div>
+            <div class="brand-sub">Football Intelligence</div>
+          </div>
+        </div>
+
+        <div class="status" id="data-status" data-state="loading" role="status">
+          <span class="status-dot"></span>
+          <span id="data-status-text">LOADING</span>
         </div>
       </header>
 
-      <main class="app-main">
-        <section class="intro">
-          <p class="eyebrow">MATCH CENTER</p>
-          <h1>Футбольная аналитика</h1>
-          <p class="intro-copy">
-            Минимальный рабочий экран для подключения данных матча.
-          </p>
-        </section>
+      <section class="match-card">
+        <div class="league" id="league-name">Нет данных</div>
 
-        <p class="app-status" id="app-status" role="status">
-          Подготовка Telegram WebApp…
-        </p>
-
-        <section class="match-card" aria-labelledby="match-title">
-          <div class="match-card-topline">
-            <span class="section-label" id="match-title">Матч</span>
-            <span class="fixture-id" id="fixture-id">fixture —</span>
+        <div class="teams">
+          <div class="team">
+            <div class="crest" id="home-crest">
+              <span class="crest-placeholder" aria-hidden="true">◇</span>
+              <img id="home-logo" alt="" hidden />
+            </div>
+            <div class="team-name" id="home-name">Нет данных</div>
           </div>
 
-          <div class="match-grid">
-            <div class="team team-home">
-              <div class="team-crest" id="home-crest" aria-hidden="true"></div>
-              <p class="team-name" id="home-name">Ожидание данных</p>
-              <p class="team-meta" id="home-meta">Хозяева</p>
-            </div>
+          <div class="match-center">
+            <div class="score" id="match-score">— : —</div>
+            <div class="fixture-status" id="fixture-status">Нет данных</div>
+          </div>
 
-            <div class="score-block">
-              <p class="match-date" id="match-date">—</p>
-              <p class="score" id="score">— : —</p>
-              <p class="match-state" id="match-state">Нет fixture</p>
+          <div class="team">
+            <div class="crest" id="away-crest">
+              <span class="crest-placeholder" aria-hidden="true">◇</span>
+              <img id="away-logo" alt="" hidden />
             </div>
+            <div class="team-name" id="away-name">Нет данных</div>
+          </div>
+        </div>
 
-            <div class="team team-away">
-              <div class="team-crest" id="away-crest" aria-hidden="true"></div>
-              <p class="team-name" id="away-name">Ожидание данных</p>
-              <p class="team-meta" id="away-meta">Гости</p>
+        <div class="match-time">
+          <span>Дата и время</span>
+          <strong id="match-date">Нет данных</strong>
+        </div>
+      </section>
+
+      <nav class="tabs" aria-label="Разделы матча">
+        <button class="tab active" type="button" data-view="overview">Обзор</button>
+        <button class="tab" type="button" data-view="form">Форма</button>
+        <button class="tab" type="button" data-view="h2h">Очные</button>
+        <button class="tab" type="button" data-view="standings">Таблица</button>
+        <button class="tab" type="button" data-view="odds">Коэффициенты</button>
+        <button class="tab" type="button" data-view="risk">Риск</button>
+      </nav>
+
+      <div id="view-overview" class="content-view active">
+        <section class="section">
+          <div class="section-head">
+            <div class="section-title">Главный прогноз</div>
+            <div class="section-label">API-Football</div>
+          </div>
+
+          <div class="prediction">
+            <div id="prediction-content" hidden>
+              <div class="prediction-top">
+                <div class="prediction-label">Прогноз матча</div>
+              </div>
+
+              <div class="prediction-main">
+                <strong id="prediction-pick">Нет данных</strong>
+                <span id="prediction-winner"></span>
+              </div>
+
+              <div class="probabilities">
+                <div class="prob">
+                  <span>Победа 1</span>
+                  <strong id="prediction-home">Нет данных</strong>
+                </div>
+                <div class="prob">
+                  <span>Ничья</span>
+                  <strong id="prediction-draw">Нет данных</strong>
+                </div>
+                <div class="prob">
+                  <span>Победа 2</span>
+                  <strong id="prediction-away">Нет данных</strong>
+                </div>
+              </div>
+
+              <p class="prediction-advice" id="prediction-advice" hidden></p>
             </div>
+            <div class="empty-state" id="prediction-empty">Прогноз недоступен</div>
           </div>
         </section>
 
-        <section class="section-list" aria-label="Разделы аналитики">
-          <article class="placeholder-section">
-            <div>
-              <p class="section-label">Обзор</p>
-              <p class="placeholder-copy">Раздел подготовлен для данных матча.</p>
-            </div>
-            <span class="section-state">Скоро</span>
-          </article>
-          <article class="placeholder-section">
-            <div>
-              <p class="section-label">Форма</p>
-              <p class="placeholder-copy">Раздел подготовлен для данных команд.</p>
-            </div>
-            <span class="section-state">Скоро</span>
-          </article>
-          <article class="placeholder-section">
-            <div>
-              <p class="section-label">Очные встречи</p>
-              <p class="placeholder-copy">История встреч будет подключена позже.</p>
-            </div>
-            <span class="section-state">Скоро</span>
-          </article>
-          <article class="placeholder-section">
-            <div>
-              <p class="section-label">Таблица</p>
-              <p class="placeholder-copy">Позиции команд появятся на следующем этапе.</p>
-            </div>
-            <span class="section-state">Скоро</span>
-          </article>
-          <article class="placeholder-section">
-            <div>
-              <p class="section-label">Коэффициенты</p>
-              <p class="placeholder-copy">Блок подготовлен для подключения линий.</p>
-            </div>
-            <span class="section-state">Скоро</span>
-          </article>
-          <article class="placeholder-section">
-            <div>
-              <p class="section-label">Риск</p>
-              <p class="placeholder-copy">Оценка риска будет добавлена позже.</p>
-            </div>
-            <span class="section-state">Скоро</span>
-          </article>
+        <section class="section" id="metrics-section" hidden>
+          <div class="section-head">
+            <div class="section-title">Ключевые показатели</div>
+            <div class="section-label">Матч</div>
+          </div>
+          <div class="stats" id="metrics-list"></div>
         </section>
-      </main>
+      </div>
 
-      <footer class="app-footer">AlmazStat foundation</footer>
-    </div>
+      <div id="view-form" class="content-view">
+        <section class="section">
+          <div class="section-head">
+            <div class="section-title">Последняя форма</div>
+            <div class="section-label">5 матчей</div>
+          </div>
+          <div class="form-card" id="form-content"></div>
+        </section>
+      </div>
 
-    <script src="/app.js" defer></script>
+      <div id="view-h2h" class="content-view">
+        <section class="section">
+          <div class="section-head">
+            <div class="section-title">Очные встречи</div>
+            <div class="section-label">Последние матчи</div>
+          </div>
+          <div class="list-card" id="h2h-content"></div>
+        </section>
+      </div>
+
+      <div id="view-standings" class="content-view">
+        <section class="section">
+          <div class="section-head">
+            <div class="section-title">Таблица</div>
+            <div class="section-label" id="standings-label">Сезон</div>
+          </div>
+          <div class="standings-list" id="standings-content"></div>
+        </section>
+      </div>
+
+      <div id="view-odds" class="content-view">
+        <section class="section">
+          <div class="section-head">
+            <div class="section-title">Коэффициенты</div>
+            <div class="section-label">API-Football</div>
+          </div>
+          <div class="list-card" id="odds-content"></div>
+        </section>
+      </div>
+
+      <div id="view-risk" class="content-view">
+        <section class="section">
+          <div class="section-head">
+            <div class="section-title">Data Quality Risk</div>
+            <div class="section-label">Источники</div>
+          </div>
+          <div class="risk">
+            <div class="risk-top">
+              <div class="risk-level">
+                <div class="risk-icon" aria-hidden="true">◈</div>
+                <div class="risk-text">
+                  <strong id="risk-level">Нет данных</strong>
+                  <span id="risk-description">Данные ещё не загружены</span>
+                </div>
+              </div>
+              <div class="risk-score" id="risk-score">—</div>
+            </div>
+            <div class="risk-bar">
+              <div class="risk-fill" id="risk-fill"></div>
+            </div>
+            <div class="source-grid" id="risk-sources"></div>
+          </div>
+        </section>
+      </div>
+
+      <div class="page-error" id="page-error" hidden></div>
+    </main>
+
+    <footer class="bottom">
+      <div class="bottom-inner">
+        <div class="bottom-item active">
+          <div class="bottom-icon" aria-hidden="true">⌂</div>
+          Матчи
+        </div>
+        <div class="bottom-item" aria-disabled="true">
+          <div class="bottom-icon" aria-hidden="true">◈</div>
+          Аналитика
+        </div>
+        <div class="bottom-item" aria-disabled="true">
+          <div class="bottom-icon" aria-hidden="true">⚙</div>
+          Настройки
+        </div>
+      </div>
+    </footer>
   </body>
 </html>
