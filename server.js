@@ -12,6 +12,120 @@ if (!Number.isInteger(port) || port <= 0) {
   throw new Error("PORT environment variable must contain a valid port number.");
 }
 
+function serverDate() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function isValidDate(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
+}
+
+function normalizeMatch(match) {
+  return {
+    fixtureId: match.fixture?.id ?? null,
+    date: match.fixture?.date ?? null,
+    timestamp: match.fixture?.timestamp ?? null,
+    status: {
+      short: match.fixture?.status?.short ?? null,
+      long: match.fixture?.status?.long ?? null,
+      elapsed: match.fixture?.status?.elapsed ?? null,
+    },
+    league: {
+      id: match.league?.id ?? null,
+      name: match.league?.name ?? null,
+      country: match.league?.country ?? null,
+      logo: match.league?.logo ?? null,
+    },
+    home: {
+      id: match.teams?.home?.id ?? null,
+      name: match.teams?.home?.name ?? null,
+      logo: match.teams?.home?.logo ?? null,
+    },
+    away: {
+      id: match.teams?.away?.id ?? null,
+      name: match.teams?.away?.name ?? null,
+      logo: match.teams?.away?.logo ?? null,
+    },
+    goals: {
+      home: match.goals?.home ?? null,
+      away: match.goals?.away ?? null,
+    },
+  };
+}
+
+app.get("/api/matches", async (request, response) => {
+  const date = String(request.query.date || serverDate()).trim();
+
+  if (!isValidDate(date)) {
+    return response.status(400).json({
+      error: {
+        code: "INVALID_DATE",
+        message: "Дата должна быть в формате YYYY-MM-DD.",
+      },
+    });
+  }
+
+  if (!apiFootballKey) {
+    return response.status(503).json({
+      error: {
+        code: "MISSING_API_KEY",
+        message:
+          "Сервис API-Football не настроен: добавьте API_FOOTBALL_KEY в environment variables.",
+      },
+    });
+  }
+
+  try {
+    const url = new URL(`${apiFootballBaseUrl}/fixtures`);
+    url.searchParams.set("date", date);
+
+    const upstreamResponse = await fetch(url, {
+      headers: {
+        "x-apisports-key": apiFootballKey,
+      },
+    });
+    const payload = await upstreamResponse.json();
+
+    if (
+      !upstreamResponse.ok ||
+      (payload.errors && Object.keys(payload.errors).length > 0)
+    ) {
+      throw new Error("API-Football вернул ошибку.");
+    }
+
+    const matches = Array.isArray(payload.response)
+      ? payload.response
+          .map(normalizeMatch)
+          .filter((match) => match.fixtureId !== null)
+      : [];
+
+    return response.json({
+      date,
+      matches,
+      apiRequestCount: 1,
+    });
+  } catch (error) {
+    console.error("API-Football matches request failed:", error);
+    return response.status(502).json({
+      error: {
+        code: "UPSTREAM_UNAVAILABLE",
+        message: "Не удалось загрузить матчи.",
+      },
+    });
+  }
+});
+
 app.get("/api/match", async (request, response) => {
   const fixture = String(request.query.fixture || "").trim();
 

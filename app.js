@@ -18,6 +18,14 @@
   const fixtureId = fixtureFromQuery || fixtureFromTelegram;
 
   const elements = {
+    matchesScreen: document.getElementById("matches-screen"),
+    analysisScreen: document.getElementById("analysis-screen"),
+    matchesHeading: document.getElementById("matches-heading"),
+    matchesDate: document.getElementById("matches-date"),
+    matchesState: document.getElementById("matches-state"),
+    matchesList: document.getElementById("matches-list"),
+    matchesNav: document.getElementById("matches-nav"),
+    analyticsNav: document.getElementById("analytics-nav"),
     dataStatus: document.getElementById("data-status"),
     dataStatusText: document.getElementById("data-status-text"),
     leagueName: document.getElementById("league-name"),
@@ -89,6 +97,36 @@
       year: compact ? "2-digit" : "numeric",
       hour: compact ? undefined : "2-digit",
       minute: compact ? undefined : "2-digit",
+    }).format(date);
+  }
+
+  function dateForOffset(offset) {
+    const date = new Date();
+    date.setHours(12, 0, 0, 0);
+    date.setDate(date.getDate() + offset);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  function formatMatchDay(value) {
+    const date = new Date(`${value}T12:00:00`);
+    if (Number.isNaN(date.getTime())) return "Нет данных";
+    return new Intl.DateTimeFormat("ru-RU", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(date);
+  }
+
+  function formatMatchTime(value) {
+    if (!value) return "Нет данных";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "Нет данных";
+    return new Intl.DateTimeFormat("ru-RU", {
+      hour: "2-digit",
+      minute: "2-digit",
     }).format(date);
   }
 
@@ -394,6 +432,156 @@
       .join("");
   }
 
+  function teamLogo(team) {
+    if (!team || !team.logo) {
+      return `<span class="team-logo-placeholder" aria-hidden="true">◇</span>`;
+    }
+
+    return `<img src="${escapeHtml(team.logo)}" alt="${escapeHtml(
+      team.name ? `Логотип ${team.name}` : "Логотип команды",
+    )}" loading="lazy" />`;
+  }
+
+  function showMatchScore(match) {
+    const hiddenScoreStatuses = ["TBD", "NS", "PST", "CANC", "ABD", "AWD", "WO"];
+    return (
+      !hiddenScoreStatuses.includes(match.status && match.status.short) &&
+      match.goals &&
+      match.goals.home !== null &&
+      match.goals.away !== null
+    );
+  }
+
+  function renderMatches(matches) {
+    const groups = new Map();
+
+    for (const match of matches) {
+      const league = match.league || {};
+      const key = `${league.id ?? "unknown"}:${league.name ?? ""}:${league.country ?? ""}`;
+      if (!groups.has(key)) {
+        groups.set(key, {
+          league,
+          matches: [],
+        });
+      }
+      groups.get(key).matches.push(match);
+    }
+
+    elements.matchesList.innerHTML = Array.from(groups.values())
+      .map(({ league, matches: leagueMatches }) => {
+        const cards = leagueMatches
+          .map((match) => {
+            const status = match.status || {};
+            const elapsed =
+              status.elapsed !== null && status.elapsed !== undefined
+                ? ` · ${status.elapsed}'`
+                : "";
+            const score = showMatchScore(match)
+              ? `<div class="fixture-card-score">${escapeHtml(
+                  match.goals.home,
+                )} : ${escapeHtml(match.goals.away)}</div>`
+              : "";
+
+            return `
+              <button class="fixture-card" type="button" data-fixture-id="${escapeHtml(match.fixtureId)}">
+                <div class="fixture-card-top">
+                  <span>${escapeHtml(formatMatchTime(match.date))}</span>
+                  <span class="fixture-card-status">${escapeHtml(
+                    status.long || status.short || "Нет данных",
+                  )}${escapeHtml(elapsed)}</span>
+                </div>
+                <div class="fixture-card-teams">
+                  <div class="fixture-card-team">
+                    ${teamLogo(match.home)}
+                    <span>${escapeHtml(match.home?.name || "Нет данных")}</span>
+                  </div>
+                  <div class="fixture-card-team">
+                    ${teamLogo(match.away)}
+                    <span>${escapeHtml(match.away?.name || "Нет данных")}</span>
+                  </div>
+                  ${score}
+                </div>
+              </button>
+            `;
+          })
+          .join("");
+
+        return `
+          <section class="league-group">
+            <div class="league-group-title">
+              ${escapeHtml(league.name || "Нет данных")}
+              <div class="league-group-country">${escapeHtml(
+                league.country || "Нет данных",
+              )}</div>
+            </div>
+            <div class="matches-grid">${cards}</div>
+          </section>
+        `;
+      })
+      .join("");
+
+    for (const card of elements.matchesList.querySelectorAll("[data-fixture-id]")) {
+      card.addEventListener("click", function () {
+        const selectedFixture = card.dataset.fixtureId;
+        if (selectedFixture) {
+          window.location.href = `/?fixture=${encodeURIComponent(selectedFixture)}`;
+        }
+      });
+    }
+  }
+
+  async function loadMatches(offset) {
+    const selectedDate = dateForOffset(offset);
+    const labels = {
+      "-1": "Вчера",
+      "0": "Сегодня",
+      "1": "Завтра",
+    };
+
+    elements.matchesHeading.textContent = labels[String(offset)] || "Матчи";
+    elements.matchesDate.textContent = formatMatchDay(selectedDate);
+    elements.matchesList.replaceChildren();
+    elements.matchesState.textContent = "Загрузка матчей";
+    elements.matchesState.hidden = false;
+    setDataStatus("loading");
+
+    for (const button of document.querySelectorAll("[data-day-offset]")) {
+      button.classList.toggle(
+        "active",
+        Number(button.dataset.dayOffset) === offset,
+      );
+    }
+
+    try {
+      const response = await fetch(
+        `/api/matches?date=${encodeURIComponent(selectedDate)}`,
+      );
+      const payload = await response.json();
+
+      if (!response.ok) throw new Error("Не удалось загрузить матчи");
+
+      const matches = Array.isArray(payload.matches) ? payload.matches : [];
+      if (matches.length === 0) {
+        elements.matchesState.textContent = "На эту дату матчей нет";
+      } else {
+        elements.matchesState.hidden = true;
+        renderMatches(matches);
+      }
+      setDataStatus("live");
+    } catch {
+      elements.matchesState.textContent = "Не удалось загрузить матчи";
+      setDataStatus("error");
+    }
+  }
+
+  function setupDateSwitcher() {
+    for (const button of document.querySelectorAll("[data-day-offset]")) {
+      button.addEventListener("click", function () {
+        loadMatches(Number(button.dataset.dayOffset));
+      });
+    }
+  }
+
   function setupTabs() {
     const tabs = Array.from(document.querySelectorAll(".tab"));
     const views = Array.from(document.querySelectorAll(".content-view"));
@@ -410,11 +598,6 @@
 
   async function loadMatch() {
     setDataStatus("loading");
-
-    if (!fixtureId) {
-      showError("Передайте fixture через URL или Telegram start_param.");
-      return;
-    }
 
     try {
       const response = await fetch(`/api/match?fixture=${encodeURIComponent(fixtureId)}`);
@@ -455,5 +638,21 @@
   }
 
   setupTabs();
-  loadMatch();
+  setupDateSwitcher();
+
+  if (fixtureId) {
+    elements.analysisScreen.hidden = false;
+    elements.matchesScreen.hidden = true;
+    elements.matchesNav.classList.remove("active");
+    elements.analyticsNav.classList.add("active");
+    elements.analyticsNav.disabled = false;
+    elements.analyticsNav.setAttribute("aria-disabled", "false");
+    loadMatch();
+  } else {
+    elements.matchesScreen.hidden = false;
+    elements.analysisScreen.hidden = true;
+    elements.matchesNav.classList.add("active");
+    elements.analyticsNav.classList.remove("active");
+    loadMatches(0);
+  }
 })();

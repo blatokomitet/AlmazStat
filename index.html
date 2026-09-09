@@ -37,6 +37,27 @@
         </div>
       </header>
 
+      <section class="matches-screen" id="matches-screen" hidden>
+        <div class="matches-heading">
+          <div>
+            <div class="screen-title" id="matches-heading">Сегодня</div>
+            <div class="screen-date" id="matches-date">—</div>
+          </div>
+        </div>
+
+        <div class="date-switcher" role="group" aria-label="Выбор даты">
+          <button type="button" data-day-offset="-1">Вчера</button>
+          <button class="active" type="button" data-day-offset="0">Сегодня</button>
+          <button type="button" data-day-offset="1">Завтра</button>
+        </div>
+
+        <div class="matches-state" id="matches-state">Загрузка матчей</div>
+        <div class="league-groups" id="matches-list"></div>
+      </section>
+
+      <section class="analysis-screen" id="analysis-screen" hidden>
+        <a class="back-link" href="/">← Все матчи</a>
+
       <section class="match-card">
         <div class="league" id="league-name">Нет данных</div>
 
@@ -192,22 +213,23 @@
       </div>
 
       <div class="page-error" id="page-error" hidden></div>
+      </section>
     </main>
 
     <footer class="bottom">
       <div class="bottom-inner">
-        <div class="bottom-item active">
+        <a class="bottom-item" id="matches-nav" href="/">
           <div class="bottom-icon" aria-hidden="true">⌂</div>
           Матчи
-        </div>
-        <div class="bottom-item" aria-disabled="true">
+        </a>
+        <button class="bottom-item" id="analytics-nav" type="button" aria-disabled="true" disabled>
           <div class="bottom-icon" aria-hidden="true">◈</div>
           Аналитика
-        </div>
-        <div class="bottom-item" aria-disabled="true">
+        </button>
+        <button class="bottom-item" type="button" aria-disabled="true" disabled>
           <div class="bottom-icon" aria-hidden="true">⚙</div>
           Настройки
-        </div>
+        </button>
       </div>
     </footer>
   </body>
