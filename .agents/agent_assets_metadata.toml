@@ -14,3 +14,17 @@ mtime_ms = 1788990175312
 storage_uri = "gcs://replit-rams-assets-kira/rams/assets/repl:8e15cde6-489c-49c7-9a06-bba9be55e0a9/6263b8be-509a-4e7e-aa81-85932d24b55d/e17921c2-38e7-4998-9f67-f33e2fc5c518"
 storage_version_token = "1788990192275317"
 content_type = "image/png"
+
+[[outputs]]
+id = "neZz6B8QQp1OEAdHU-f_q"
+uri = "file://screenshots/almazstat-v1-matches.png"
+type = "image"
+title = "AlmazStat v1.0 — экран матчей"
+description = "Мобильный экран с реальными матчами, сгруппированными по лиге."
+logical_id = "aaf9483e-9236-426f-a40b-9834872065b3"
+content_hash = "sha256:75b032ccc62b16310bd97fdbb1f7c7cfdb41cad9bb8c33b43cfcaa625406b509"
+size = 83269
+mtime_ms = 1788991731952
+storage_uri = "gcs://replit-rams-assets-kira/rams/assets/repl:8e15cde6-489c-49c7-9a06-bba9be55e0a9/aaf9483e-9236-426f-a40b-9834872065b3/0eb2b10f-e7ec-4d71-8763-7f22e724ec13"
+storage_version_token = "1788991755191271"
+content_type = "image/png"
