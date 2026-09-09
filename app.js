@@ -20,6 +20,8 @@
   const elements = {
     matchesScreen: document.getElementById("matches-screen"),
     analysisScreen: document.getElementById("analysis-screen"),
+    analysisState: document.getElementById("analysis-state"),
+    analysisContent: document.getElementById("analysis-content"),
     matchesHeading: document.getElementById("matches-heading"),
     matchesDate: document.getElementById("matches-date"),
     matchesState: document.getElementById("matches-state"),
@@ -150,23 +152,22 @@
   }
 
   function renderFixture(match) {
-    const home = match.teams && match.teams.home;
-    const away = match.teams && match.teams.away;
-    const goals = match.goals || {};
+    const home = match.home || {};
+    const away = match.away || {};
+    const goals = match.score || {};
     const fixture = match.fixture || {};
     const status = fixture.status || {};
 
-    elements.leagueName.textContent =
-      (match.league && match.league.name) || "Нет данных";
-    elements.homeName.textContent = (home && home.name) || "Нет данных";
-    elements.awayName.textContent = (away && away.name) || "Нет данных";
+    elements.leagueName.textContent = match.league?.name || "Нет данных";
+    elements.homeName.textContent = home.name || "Нет данных";
+    elements.awayName.textContent = away.name || "Нет данных";
     elements.matchScore.textContent = `${goals.home ?? "—"} : ${goals.away ?? "—"}`;
     elements.fixtureStatus.textContent =
       status.long || status.short || "Нет данных";
     elements.matchDate.textContent = formatDate(fixture.date, false);
 
-    setLogo(elements.homeLogo, elements.homeCrest, home && home.logo, home && home.name);
-    setLogo(elements.awayLogo, elements.awayCrest, away && away.logo, away && away.name);
+    setLogo(elements.homeLogo, elements.homeCrest, home.logo, home.name);
+    setLogo(elements.awayLogo, elements.awayCrest, away.logo, away.name);
   }
 
   function numericPercent(value) {
@@ -192,8 +193,43 @@
     elements.metricsList.appendChild(card);
   }
 
-  function renderPrediction(prediction) {
-    const data = prediction && prediction.predictions;
+  function formPercentage(matches) {
+    const completed = (matches || []).filter((match) =>
+      ["W", "D", "L"].includes(match.result),
+    );
+    if (completed.length === 0) return null;
+    const points = completed.reduce(
+      (total, match) =>
+        total + (match.result === "W" ? 3 : match.result === "D" ? 1 : 0),
+      0,
+    );
+    return Math.round((points / (completed.length * 3)) * 100);
+  }
+
+  function renderMetrics(prediction, form) {
+    elements.metricsList.replaceChildren();
+    const goals = prediction?.goals || {};
+    addMetric("Голы хозяев", goals.home, "Prediction API");
+    addMetric("Голы гостей", goals.away, "Prediction API");
+    addMetric("Тотал", prediction?.underOver, "Prediction API");
+    const homeForm = formPercentage(form?.home);
+    const awayForm = formPercentage(form?.away);
+    addMetric(
+      "Форма хозяев",
+      homeForm === null ? null : `${homeForm}%`,
+      "Последние матчи",
+    );
+    addMetric(
+      "Форма гостей",
+      awayForm === null ? null : `${awayForm}%`,
+      "Последние матчи",
+    );
+    elements.metricsSection.hidden = elements.metricsList.children.length === 0;
+  }
+
+  function renderPrediction(prediction, form) {
+    const data = prediction;
+    renderMetrics(data, form);
     const percent = data && data.percent;
     const hasPercent =
       percent &&
@@ -204,7 +240,6 @@
     if (!data || !hasPercent) {
       elements.predictionContent.hidden = true;
       elements.predictionEmpty.hidden = false;
-      elements.metricsSection.hidden = true;
       return;
     }
 
@@ -215,14 +250,12 @@
     ].filter((item) => item.value !== null);
     const highestValue = Math.max(...options.map((item) => item.value));
     const best = options.filter((item) => item.value === highestValue);
-    const winner = data.winner || {};
-
     elements.predictionPick.textContent = best.length
       ? best.map((item) => item.label).join(" / ")
       : "Нет данных";
     elements.predictionWinner.textContent =
-      winner.name ||
-      winner.comment ||
+      data.winner ||
+      data.winnerComment ||
       (best.length === 1 && best[0].key === "draw" ? "Ничья" : "");
     elements.predictionHome.textContent = displayPercent(percent.home);
     elements.predictionDraw.textContent = displayPercent(percent.draw);
@@ -238,70 +271,64 @@
     elements.predictionContent.hidden = false;
     elements.predictionEmpty.hidden = true;
 
-    elements.metricsList.replaceChildren();
-    const goals = data.goals || {};
-    addMetric("Голы хозяев", goals.home, "Prediction API");
-    addMetric("Голы гостей", goals.away, "Prediction API");
-
-    const btts =
-      data.btts ??
-      data.both_teams_to_score ??
-      data.bothTeamsToScore ??
-      null;
-    addMetric("Обе забьют", btts, "Prediction API");
-
-    elements.metricsSection.hidden = elements.metricsList.children.length === 0;
-  }
-
-  function resultForTeam(match, teamId) {
-    const status = match.fixture && match.fixture.status;
-    if (!status || !["FT", "AET", "PEN"].includes(status.short)) return null;
-
-    const isHome = match.teams && match.teams.home && match.teams.home.id === teamId;
-    const isAway = match.teams && match.teams.away && match.teams.away.id === teamId;
-    if (!isHome && !isAway) return null;
-
-    const teamGoals = isHome ? match.goals.home : match.goals.away;
-    const opponentGoals = isHome ? match.goals.away : match.goals.home;
-    if (teamGoals === null || opponentGoals === null) return null;
-    if (teamGoals > opponentGoals) return { label: "В", className: "win" };
-    if (teamGoals < opponentGoals) return { label: "П", className: "loss" };
-    return { label: "Н", className: "draw" };
   }
 
   function renderFormRow(team, matches) {
-    const results = (matches || [])
-      .map((match) => resultForTeam(match, team.id))
-      .filter(Boolean)
-      .slice(0, 5);
-
-    const resultsHtml = results.length
-      ? results
+    const resultClasses = {
+      W: "win",
+      D: "draw",
+      L: "loss",
+    };
+    const resultLabels = {
+      W: "В",
+      D: "Н",
+      L: "П",
+    };
+    const matchesHtml = (matches || []).length
+      ? matches
+          .slice(0, 5)
           .map(
-            (result) =>
-              `<div class="result ${result.className}">${result.label}</div>`,
+            (match) => `
+              <div class="form-match">
+                <div class="result ${resultClasses[match.result] || ""}">
+                  ${escapeHtml(resultLabels[match.result] || "—")}
+                </div>
+                <div class="form-match-opponent">
+                  ${escapeHtml(match.opponent?.name || "Нет данных")}
+                  <div class="list-secondary">
+                    ${escapeHtml(formatDate(match.date, true))} ·
+                    ${escapeHtml(match.side || "—")} ·
+                    ${escapeHtml(match.league || "Нет данных")}
+                  </div>
+                </div>
+                <div class="form-match-score">
+                  ${escapeHtml(match.score?.home ?? "—")} :
+                  ${escapeHtml(match.score?.away ?? "—")}
+                </div>
+              </div>
+            `,
           )
           .join("")
-      : `<span class="list-secondary">Нет данных</span>`;
+      : `<div class="empty-state">Нет данных</div>`;
 
     return `
-      <div class="form-row">
-        <div class="form-team">${escapeHtml(team.name || "Нет данных")}</div>
-        <div class="form-results">${resultsHtml}</div>
+      <div class="form-team-block">
+        <div class="form-team-title">${escapeHtml(team.name || "Нет данных")}</div>
+        ${matchesHtml}
       </div>
     `;
   }
 
   function renderForm(match, form) {
-    const home = match.teams.home;
-    const away = match.teams.away;
     elements.formContent.innerHTML =
-      renderFormRow(home, form && form.home) + renderFormRow(away, form && form.away);
+      renderFormRow(match.home, form && form.home) +
+      renderFormRow(match.away, form && form.away);
   }
 
   function renderH2h(matches) {
     if (!matches || matches.length === 0) {
-      elements.h2hContent.innerHTML = `<div class="empty-state">Нет данных</div>`;
+      elements.h2hContent.innerHTML =
+        `<div class="empty-state">История очных встреч недоступна</div>`;
       return;
     }
 
@@ -311,10 +338,14 @@
         (match) => `
           <div class="list-row">
             <div class="list-primary">
-              ${escapeHtml(match.teams.home.name)} — ${escapeHtml(match.teams.away.name)}
-              <div class="list-secondary">${escapeHtml(formatDate(match.fixture.date, true))}</div>
+              ${escapeHtml(match.home?.name || "Нет данных")} —
+              ${escapeHtml(match.away?.name || "Нет данных")}
+              <div class="list-secondary">
+                ${escapeHtml(formatDate(match.date, true))} ·
+                ${escapeHtml(match.league || "Нет данных")}
+              </div>
             </div>
-            <div class="list-value">${match.goals.home ?? "—"} : ${match.goals.away ?? "—"}</div>
+            <div class="list-value">${match.score?.home ?? "—"} : ${match.score?.away ?? "—"}</div>
           </div>
         `,
       )
@@ -323,24 +354,24 @@
 
   function renderStandingCard(row) {
     if (!row) return "";
-    const all = row.all || {};
-    const goals = all.goals || {};
 
     return `
       <article class="standing-card">
         <div class="standing-head">
-          <div class="standing-team">${escapeHtml(row.team.name)}</div>
+          <div class="standing-team">${escapeHtml(row.team?.name || "Нет данных")}</div>
           <div class="standing-rank">#${escapeHtml(row.rank ?? "—")}</div>
         </div>
         <div class="standing-grid">
-          <div class="standing-stat"><span>И</span><strong>${escapeHtml(all.played ?? "—")}</strong></div>
-          <div class="standing-stat"><span>В</span><strong>${escapeHtml(all.win ?? "—")}</strong></div>
-          <div class="standing-stat"><span>Н</span><strong>${escapeHtml(all.draw ?? "—")}</strong></div>
-          <div class="standing-stat"><span>П</span><strong>${escapeHtml(all.lose ?? "—")}</strong></div>
-          <div class="standing-stat"><span>ГЗ</span><strong>${escapeHtml(goals.for ?? "—")}</strong></div>
-          <div class="standing-stat"><span>ГП</span><strong>${escapeHtml(goals.against ?? "—")}</strong></div>
+          <div class="standing-stat"><span>И</span><strong>${escapeHtml(row.played ?? "—")}</strong></div>
+          <div class="standing-stat"><span>В</span><strong>${escapeHtml(row.win ?? "—")}</strong></div>
+          <div class="standing-stat"><span>Н</span><strong>${escapeHtml(row.draw ?? "—")}</strong></div>
+          <div class="standing-stat"><span>П</span><strong>${escapeHtml(row.lose ?? "—")}</strong></div>
+          <div class="standing-stat"><span>ГЗ</span><strong>${escapeHtml(row.goalsFor ?? "—")}</strong></div>
+          <div class="standing-stat"><span>ГП</span><strong>${escapeHtml(row.goalsAgainst ?? "—")}</strong></div>
+          <div class="standing-stat"><span>±</span><strong>${escapeHtml(row.goalDifference ?? "—")}</strong></div>
           <div class="standing-stat"><span>О</span><strong>${escapeHtml(row.points ?? "—")}</strong></div>
         </div>
+        ${row.form ? `<div class="list-secondary">Форма: ${escapeHtml(row.form)}</div>` : ""}
       </article>
     `;
   }
@@ -351,31 +382,12 @@
       renderStandingCard(standings && standings.home) +
       renderStandingCard(standings && standings.away);
     elements.standingsContent.innerHTML =
-      html || `<div class="list-card"><div class="empty-state">Нет данных</div></div>`;
-  }
-
-  function flattenOdds(odds) {
-    const rows = [];
-    for (const fixtureOdds of odds || []) {
-      for (const bookmaker of fixtureOdds.bookmakers || []) {
-        for (const market of bookmaker.bets || []) {
-          for (const option of market.values || []) {
-            rows.push({
-              bookmaker: bookmaker.name,
-              market: market.name,
-              value: option.value,
-              odd: option.odd,
-            });
-            if (rows.length >= 12) return rows;
-          }
-        }
-      }
-    }
-    return rows;
+      html ||
+      `<div class="list-card"><div class="empty-state">Таблица недоступна для этого турнира</div></div>`;
   }
 
   function renderOdds(odds) {
-    const rows = flattenOdds(odds);
+    const rows = (odds || []).slice(0, 24);
     if (rows.length === 0) {
       elements.oddsContent.innerHTML =
         `<div class="empty-state">Коэффициенты недоступны</div>`;
@@ -387,7 +399,7 @@
         (row) => `
           <div class="list-row">
             <div class="list-primary">
-              ${escapeHtml(row.value)}
+              ${escapeHtml(row.option || "Нет данных")}
               <div class="list-secondary">${escapeHtml(row.bookmaker)} · ${escapeHtml(row.market)}</div>
             </div>
             <div class="list-value">${escapeHtml(row.odd)}</div>
@@ -397,7 +409,7 @@
       .join("");
   }
 
-  function renderRisk(availability) {
+  function renderRisk(risk, availability) {
     const sources = [
       ["fixture", "Fixture"],
       ["prediction", "Prediction"],
@@ -406,19 +418,9 @@
       ["standings", "Standings"],
       ["odds", "Odds"],
     ];
-    const availableCount = sources.filter(([key]) => availability[key]).length;
-    const missingCount = sources.length - availableCount;
-    const score = Math.round((missingCount / sources.length) * 100);
-
-    let level = "HIGH DATA RISK";
-    let description = "Большинство источников недоступно";
-    if (score <= 33) {
-      level = "LOW DATA RISK";
-      description = "Большинство источников доступно";
-    } else if (score <= 66) {
-      level = "MEDIUM DATA RISK";
-      description = "Доступна только часть источников";
-    }
+    const score = risk?.score ?? 100;
+    const level = risk?.level || "HIGH DATA RISK";
+    const description = `${risk?.availableSources ?? 0} из ${risk?.totalSources ?? 6} источников доступны`;
 
     elements.riskLevel.textContent = level;
     elements.riskDescription.textContent = description;
@@ -598,6 +600,10 @@
 
   async function loadMatch() {
     setDataStatus("loading");
+    elements.analysisState.textContent = "Загрузка аналитики";
+    elements.analysisState.hidden = false;
+    elements.analysisContent.hidden = true;
+    elements.pageError.hidden = true;
 
     try {
       const response = await fetch(`/api/match?fixture=${encodeURIComponent(fixtureId)}`);
@@ -611,18 +617,19 @@
         );
       }
 
-      const match = payload.response && payload.response[0];
-      if (!match) throw new Error("API-Football не вернул данные по этому fixture.");
+      if (!payload.fixture) {
+        throw new Error("Не удалось загрузить аналитику");
+      }
 
-      const analytics = payload.analytics || {};
-      renderFixture(match);
-      renderPrediction(analytics.prediction);
-      renderForm(match, analytics.form);
-      renderH2h(analytics.h2h);
-      renderStandings(analytics.standings, match.league && match.league.season);
-      renderOdds(analytics.odds);
+      renderFixture(payload);
+      renderPrediction(payload.prediction, payload.form);
+      renderForm(payload, payload.form);
+      renderH2h(payload.h2h);
+      renderStandings(payload.standings, payload.league?.season);
+      renderOdds(payload.odds);
       renderRisk(
-        analytics.availability || {
+        payload.risk,
+        payload.sources || {
           fixture: true,
           prediction: false,
           form: false,
@@ -631,9 +638,14 @@
           odds: false,
         },
       );
+      elements.analysisContent.hidden = false;
+      elements.analysisState.hidden = true;
       setDataStatus("live");
-    } catch (error) {
-      showError(error instanceof Error ? error.message : "Ошибка загрузки данных.");
+    } catch {
+      elements.analysisState.textContent = "Не удалось загрузить аналитику";
+      elements.analysisState.hidden = false;
+      elements.analysisContent.hidden = true;
+      setDataStatus("error");
     }
   }
 

@@ -57,6 +57,8 @@
 
       <section class="analysis-screen" id="analysis-screen" hidden>
         <a class="back-link" href="/">← Все матчи</a>
+        <div class="analysis-state" id="analysis-state">Загрузка аналитики</div>
+        <div id="analysis-content" hidden>
 
       <section class="match-card">
         <div class="league" id="league-name">Нет данных</div>
@@ -208,11 +210,15 @@
               <div class="risk-fill" id="risk-fill"></div>
             </div>
             <div class="source-grid" id="risk-sources"></div>
+            <p class="risk-note">
+              Индекс показывает полноту аналитических данных, а не вероятность исхода матча.
+            </p>
           </div>
         </section>
       </div>
 
       <div class="page-error" id="page-error" hidden></div>
+        </div>
       </section>
     </main>
 

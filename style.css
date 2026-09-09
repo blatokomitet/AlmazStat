@@ -304,6 +304,13 @@ a {
   text-decoration: none;
 }
 
+.analysis-state {
+  padding: 52px 12px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
 .match-card::after {
   position: absolute;
   top: -80px;
@@ -604,6 +611,42 @@ a {
   font-weight: 700;
 }
 
+.form-team-block + .form-team-block {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.form-team-title {
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.form-match {
+  display: grid;
+  grid-template-columns: 25px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.form-match:last-child {
+  border-bottom: 0;
+}
+
+.form-match-opponent {
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.form-match-score {
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .form-results {
   display: flex;
   flex: 0 0 auto;
@@ -788,6 +831,15 @@ a {
 
 .source-item.available::before {
   background: var(--green);
+}
+
+.risk-note {
+  margin: 16px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
 }
 
 .page-error {

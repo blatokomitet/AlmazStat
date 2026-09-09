@@ -7,6 +7,7 @@ const port = Number(process.env.PORT);
 const apiFootballKey = process.env.API_FOOTBALL_KEY;
 const apiFootballBaseUrl = "https://v3.football.api-sports.io";
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
+const matchCache = new Map();
 
 if (!Number.isInteger(port) || port <= 0) {
   throw new Error("PORT environment variable must contain a valid port number.");
@@ -62,6 +63,168 @@ function normalizeMatch(match) {
       away: match.goals?.away ?? null,
     },
   };
+}
+
+function formResult(match, teamId) {
+  const isHome = match.teams?.home?.id === teamId;
+  const isAway = match.teams?.away?.id === teamId;
+  const homeGoals = match.goals?.home;
+  const awayGoals = match.goals?.away;
+  if (
+    (!isHome && !isAway) ||
+    homeGoals === null ||
+    homeGoals === undefined ||
+    awayGoals === null ||
+    awayGoals === undefined
+  ) {
+    return null;
+  }
+  const teamGoals = isHome ? homeGoals : awayGoals;
+  const opponentGoals = isHome ? awayGoals : homeGoals;
+  if (teamGoals > opponentGoals) return "W";
+  if (teamGoals < opponentGoals) return "L";
+  return "D";
+}
+
+function normalizeFormMatch(match, teamId) {
+  const isHome = match.teams?.home?.id === teamId;
+  const opponent = isHome ? match.teams?.away : match.teams?.home;
+  return {
+    fixtureId: match.fixture?.id ?? null,
+    date: match.fixture?.date ?? null,
+    opponent: {
+      id: opponent?.id ?? null,
+      name: opponent?.name ?? null,
+      logo: opponent?.logo ?? null,
+    },
+    side: isHome ? "H" : "A",
+    score: {
+      home: match.goals?.home ?? null,
+      away: match.goals?.away ?? null,
+    },
+    result: formResult(match, teamId),
+    league: match.league?.name ?? null,
+  };
+}
+
+function normalizeH2hMatch(match) {
+  return {
+    fixtureId: match.fixture?.id ?? null,
+    date: match.fixture?.date ?? null,
+    league: match.league?.name ?? null,
+    home: {
+      id: match.teams?.home?.id ?? null,
+      name: match.teams?.home?.name ?? null,
+      logo: match.teams?.home?.logo ?? null,
+    },
+    away: {
+      id: match.teams?.away?.id ?? null,
+      name: match.teams?.away?.name ?? null,
+      logo: match.teams?.away?.logo ?? null,
+    },
+    score: {
+      home: match.goals?.home ?? null,
+      away: match.goals?.away ?? null,
+    },
+  };
+}
+
+function normalizeStanding(row) {
+  if (!row) return null;
+  return {
+    rank: row.rank ?? null,
+    team: {
+      id: row.team?.id ?? null,
+      name: row.team?.name ?? null,
+      logo: row.team?.logo ?? null,
+    },
+    played: row.all?.played ?? null,
+    win: row.all?.win ?? null,
+    draw: row.all?.draw ?? null,
+    lose: row.all?.lose ?? null,
+    goalsFor: row.all?.goals?.for ?? null,
+    goalsAgainst: row.all?.goals?.against ?? null,
+    goalDifference: row.goalsDiff ?? null,
+    points: row.points ?? null,
+    form: row.form ?? null,
+  };
+}
+
+function normalizeOdds(oddsResponse) {
+  const rows = [];
+  const preferredMarkets = new Set([
+    "match winner",
+    "goals over/under",
+    "both teams score",
+    "double chance",
+  ]);
+  for (const fixtureOdds of oddsResponse || []) {
+    for (const bookmaker of fixtureOdds.bookmakers || []) {
+      for (const market of bookmaker.bets || []) {
+        for (const option of market.values || []) {
+          rows.push({
+            bookmaker: bookmaker.name ?? null,
+            market: market.name ?? null,
+            option: option.value ?? null,
+            odd: option.odd ?? null,
+          });
+        }
+      }
+    }
+  }
+  const preferred = rows.filter((row) =>
+    preferredMarkets.has(String(row.market || "").toLowerCase()),
+  );
+  return (preferred.length ? preferred : rows).slice(0, 24);
+}
+
+function normalizePrediction(prediction) {
+  const data = prediction?.predictions;
+  if (!data) return null;
+  return {
+    winner: data.winner?.name ?? null,
+    winnerComment: data.winner?.comment ?? null,
+    advice: data.advice ?? null,
+    percent: {
+      home: data.percent?.home ?? null,
+      draw: data.percent?.draw ?? null,
+      away: data.percent?.away ?? null,
+    },
+    goals: {
+      home: data.goals?.home ?? null,
+      away: data.goals?.away ?? null,
+    },
+    underOver: data.under_over ?? null,
+  };
+}
+
+function riskFromSources(sources) {
+  const totalSources = 6;
+  const availableSources = Object.values(sources).filter(Boolean).length;
+  const score = Math.round(
+    ((totalSources - availableSources) / totalSources) * 100,
+  );
+  return {
+    score,
+    level:
+      score <= 33
+        ? "LOW DATA RISK"
+        : score <= 66
+          ? "MEDIUM DATA RISK"
+          : "HIGH DATA RISK",
+    availableSources,
+    totalSources,
+  };
+}
+
+function cacheTtl(statusShort) {
+  if (["FT", "AET", "PEN"].includes(statusShort)) {
+    return 24 * 60 * 60 * 1000;
+  }
+  if (["1H", "HT", "2H", "ET", "BT", "P", "LIVE", "INT"].includes(statusShort)) {
+    return 5 * 60 * 1000;
+  }
+  return 30 * 60 * 1000;
 }
 
 app.get("/health", (_request, response) => {
@@ -156,6 +319,18 @@ app.get("/api/match", async (request, response) => {
   }
 
   try {
+    const cached = matchCache.get(fixture);
+    if (cached && cached.expiresAt > Date.now()) {
+      return response.json({
+        ...cached.data,
+        meta: {
+          cached: true,
+          apiRequestCount: 0,
+        },
+      });
+    }
+    if (cached) matchCache.delete(fixture);
+
     let apiRequestCount = 0;
 
     async function fetchApiFootball(pathname, parameters) {
@@ -243,32 +418,84 @@ app.get("/api/match", async (request, response) => {
       standingRows.find((row) => row.team && row.team.id === homeId) || null;
     const awayStanding =
       standingRows.find((row) => row.team && row.team.id === awayId) || null;
-    const prediction = predictionResponse[0] || null;
-
-    const availability = {
+    const prediction = normalizePrediction(predictionResponse[0]);
+    const normalizedHomeForm = homeForm
+      .slice(0, 5)
+      .map((item) => normalizeFormMatch(item, homeId));
+    const normalizedAwayForm = awayForm
+      .slice(0, 5)
+      .map((item) => normalizeFormMatch(item, awayId));
+    const normalizedOdds = normalizeOdds(odds);
+    const sources = {
       fixture: true,
       prediction: Boolean(prediction),
-      form: homeForm.length > 0 && awayForm.length > 0,
+      form: normalizedHomeForm.length > 0 && normalizedAwayForm.length > 0,
       h2h: h2h.length > 0,
       standings: Boolean(homeStanding && awayStanding),
-      odds: odds.length > 0,
+      odds: normalizedOdds.length > 0,
     };
 
+    const normalizedResponse = {
+      fixture: {
+        id: match.fixture?.id ?? null,
+        date: match.fixture?.date ?? null,
+        timestamp: match.fixture?.timestamp ?? null,
+        status: {
+          short: match.fixture?.status?.short ?? null,
+          long: match.fixture?.status?.long ?? null,
+          elapsed: match.fixture?.status?.elapsed ?? null,
+        },
+        venue: match.fixture?.venue?.name ?? null,
+      },
+      league: {
+        id: match.league?.id ?? null,
+        name: match.league?.name ?? null,
+        country: match.league?.country ?? null,
+        logo: match.league?.logo ?? null,
+        season: match.league?.season ?? null,
+        round: match.league?.round ?? null,
+      },
+      home: {
+        id: match.teams?.home?.id ?? null,
+        name: match.teams?.home?.name ?? null,
+        logo: match.teams?.home?.logo ?? null,
+        winner: match.teams?.home?.winner ?? null,
+      },
+      away: {
+        id: match.teams?.away?.id ?? null,
+        name: match.teams?.away?.name ?? null,
+        logo: match.teams?.away?.logo ?? null,
+        winner: match.teams?.away?.winner ?? null,
+      },
+      score: {
+        home: match.goals?.home ?? null,
+        away: match.goals?.away ?? null,
+      },
+      prediction,
+      form: {
+        home: normalizedHomeForm,
+        away: normalizedAwayForm,
+      },
+      h2h: h2h.slice(0, 5).map(normalizeH2hMatch),
+      standings: {
+        home: normalizeStanding(homeStanding),
+        away: normalizeStanding(awayStanding),
+      },
+      odds: normalizedOdds,
+      sources,
+      risk: riskFromSources(sources),
+    };
+
+    matchCache.set(fixture, {
+      data: normalizedResponse,
+      expiresAt:
+        Date.now() + cacheTtl(normalizedResponse.fixture.status.short),
+    });
+
     return response.json({
-      response: [match],
-      analytics: {
-        prediction,
-        form: {
-          home: homeForm,
-          away: awayForm,
-        },
-        h2h,
-        standings: {
-          home: homeStanding,
-          away: awayStanding,
-        },
-        odds,
-        availability,
+      ...normalizedResponse,
+      meta: {
+        cached: false,
         apiRequestCount,
       },
     });
