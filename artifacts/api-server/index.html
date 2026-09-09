@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#101218" />
+    <meta
+      name="description"
+      content="AlmazStat — фундамент Telegram Mini App для футбольной аналитики"
+    />
+    <title>AlmazStat</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header">
+        <div class="brand-mark" aria-hidden="true">AS</div>
+        <div>
+          <p class="brand-name">AlmazStat</p>
+          <p class="brand-caption">Football analytics</p>
+        </div>
+      </header>
+
+      <main class="app-main">
+        <section class="intro">
+          <p class="eyebrow">MATCH CENTER</p>
+          <h1>Футбольная аналитика</h1>
+          <p class="intro-copy">
+            Минимальный рабочий экран для подключения данных матча.
+          </p>
+        </section>
+
+        <p class="app-status" id="app-status" role="status">
+          Подготовка Telegram WebApp…
+        </p>
+
+        <section class="match-card" aria-labelledby="match-title">
+          <div class="match-card-topline">
+            <span class="section-label" id="match-title">Матч</span>
+            <span class="fixture-id" id="fixture-id">fixture —</span>
+          </div>
+
+          <div class="match-grid">
+            <div class="team team-home">
+              <div class="team-crest" id="home-crest" aria-hidden="true"></div>
+              <p class="team-name" id="home-name">Ожидание данных</p>
+              <p class="team-meta" id="home-meta">Хозяева</p>
+            </div>
+
+            <div class="score-block">
+              <p class="match-date" id="match-date">—</p>
+              <p class="score" id="score">— : —</p>
+              <p class="match-state" id="match-state">Нет fixture</p>
+            </div>
+
+            <div class="team team-away">
+              <div class="team-crest" id="away-crest" aria-hidden="true"></div>
+              <p class="team-name" id="away-name">Ожидание данных</p>
+              <p class="team-meta" id="away-meta">Гости</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-list" aria-label="Разделы аналитики">
+          <article class="placeholder-section">
+            <div>
+              <p class="section-label">Обзор</p>
+              <p class="placeholder-copy">Раздел подготовлен для данных матча.</p>
+            </div>
+            <span class="section-state">Скоро</span>
+          </article>
+          <article class="placeholder-section">
+            <div>
+              <p class="section-label">Форма</p>
+              <p class="placeholder-copy">Раздел подготовлен для данных команд.</p>
+            </div>
+            <span class="section-state">Скоро</span>
+          </article>
+          <article class="placeholder-section">
+            <div>
+              <p class="section-label">Очные встречи</p>
+              <p class="placeholder-copy">История встреч будет подключена позже.</p>
+            </div>
+            <span class="section-state">Скоро</span>
+          </article>
+          <article class="placeholder-section">
+            <div>
+              <p class="section-label">Таблица</p>
+              <p class="placeholder-copy">Позиции команд появятся на следующем этапе.</p>
+            </div>
+            <span class="section-state">Скоро</span>
+          </article>
+          <article class="placeholder-section">
+            <div>
+              <p class="section-label">Коэффициенты</p>
+              <p class="placeholder-copy">Блок подготовлен для подключения линий.</p>
+            </div>
+            <span class="section-state">Скоро</span>
+          </article>
+          <article class="placeholder-section">
+            <div>
+              <p class="section-label">Риск</p>
+              <p class="placeholder-copy">Оценка риска будет добавлена позже.</p>
+            </div>
+            <span class="section-state">Скоро</span>
+          </article>
+        </section>
+      </main>
+
+      <footer class="app-footer">AlmazStat foundation</footer>
+    </div>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>
