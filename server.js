@@ -3,10 +3,14 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const app = express();
-const port = Number(process.env.PORT || 5000);
+const port = Number(process.env.PORT);
 const apiFootballKey = process.env.API_FOOTBALL_KEY;
 const apiFootballBaseUrl = "https://v3.football.api-sports.io";
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
+
+if (!Number.isInteger(port) || port <= 0) {
+  throw new Error("PORT environment variable must contain a valid port number.");
+}
 
 app.get("/api/match", async (request, response) => {
   const fixture = String(request.query.fixture || "").trim();

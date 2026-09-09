@@ -4,9 +4,7 @@ Minimal Telegram Mini App foundation for football match analytics.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the AlmazStat server
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
+- `pnpm start` — run the AlmazStat server using `process.env.PORT`
 - Required env: `API_FOOTBALL_KEY` for live `/api/match` requests
 
 ## Stack
@@ -15,10 +13,10 @@ Minimal Telegram Mini App foundation for football match analytics.
 
 ## Where things live
 
-- `artifacts/api-server/index.html` — Telegram Mini App entry page
-- `artifacts/api-server/style.css` — mobile-first dark theme
-- `artifacts/api-server/app.js` — Telegram WebApp initialization and match rendering
-- `artifacts/api-server/server.js` — static server and API-Football proxy
+- `index.html` — Telegram Mini App entry page
+- `style.css` — mobile-first dark theme
+- `app.js` — Telegram WebApp initialization and match rendering
+- `server.js` — static server and API-Football proxy
 
 ## Architecture decisions
 
