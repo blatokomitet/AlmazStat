@@ -64,6 +64,13 @@ function normalizeMatch(match) {
   };
 }
 
+app.get("/health", (_request, response) => {
+  return response.json({
+    status: "ok",
+    service: "almazstat",
+  });
+});
+
 app.get("/api/matches", async (request, response) => {
   const date = String(request.query.date || serverDate()).trim();
 
