@@ -42,3 +42,8 @@ timeoutMs = 20000
 
 [nix]
 channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+API_FOOTBALL_KEY = "b31f5e244f7e567b7b21fe4f93f283a3"
