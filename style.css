@@ -19,12 +19,12 @@
 }
 
 html {
-  min-width: 320px;
+  min-width: 0;
   background: var(--bg);
 }
 
 body {
-  min-width: 320px;
+  min-width: 0;
   min-height: 100vh;
   margin: 0;
   background:
@@ -162,6 +162,15 @@ a {
   letter-spacing: -1px;
 }
 
+.screen-kicker {
+  margin-bottom: 5px;
+  color: var(--violet);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.7px;
+  text-transform: uppercase;
+}
+
 .screen-date {
   margin-top: 6px;
   color: var(--muted);
@@ -180,6 +189,7 @@ a {
 }
 
 .date-switcher button {
+  min-height: 44px;
   padding: 10px 6px;
   border: 0;
   border-radius: 11px;
@@ -187,6 +197,92 @@ a {
   color: var(--muted);
   cursor: pointer;
   font-size: 12px;
+}
+
+.match-center-tools {
+  display: grid;
+  gap: 13px;
+  margin-bottom: 24px;
+}
+
+.match-search {
+  position: relative;
+  display: block;
+}
+
+.match-search-icon {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  color: var(--muted);
+  font-size: 21px;
+  pointer-events: none;
+  transform: translateY(-52%);
+}
+
+.match-search input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 16px 0 44px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  outline: none;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+}
+
+.match-search input::placeholder {
+  color: var(--muted);
+}
+
+.match-search input:focus {
+  border-color: rgba(101, 119, 255, 0.45);
+  box-shadow: 0 0 0 3px rgba(101, 119, 255, 0.08);
+}
+
+.match-filters {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin: 0 -16px;
+  padding: 0 16px 3px;
+  scrollbar-width: none;
+}
+
+.match-filters::-webkit-scrollbar {
+  display: none;
+}
+
+.match-filters button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 17px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.match-filters button.active {
+  border-color: rgba(101, 119, 255, 0.38);
+  background: rgba(101, 119, 255, 0.15);
+  color: var(--text);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .date-switcher button.active {
@@ -207,10 +303,34 @@ a {
 }
 
 .league-group-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 11px;
   color: var(--text);
   font-size: 15px;
   font-weight: 800;
+}
+
+.league-group-logo,
+.league-group-logo-placeholder {
+  display: grid;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  object-fit: contain;
+}
+
+.league-group-logo-placeholder {
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.league-group-copy {
+  min-width: 0;
 }
 
 .league-group-country {
@@ -226,6 +346,7 @@ a {
 }
 
 .fixture-card {
+  min-height: 116px;
   width: 100%;
   padding: 16px;
   border: 1px solid var(--line);
@@ -236,6 +357,13 @@ a {
   color: var(--text);
   cursor: pointer;
   text-align: left;
+}
+
+.fixture-card.live {
+  border-color: rgba(104, 211, 145, 0.24);
+  background:
+    linear-gradient(145deg, rgba(104, 211, 145, 0.06), transparent 45%),
+    var(--surface);
 }
 
 .fixture-card-top {
@@ -251,6 +379,11 @@ a {
 .fixture-card-status {
   color: var(--gold);
   text-align: right;
+}
+
+.fixture-card.live .fixture-card-status {
+  color: var(--green);
+  font-weight: 800;
 }
 
 .fixture-card-teams {
@@ -880,6 +1013,7 @@ a {
   display: block;
   border: 0;
   background: transparent;
+  min-height: 48px;
   padding: 8px;
   color: var(--muted);
   cursor: pointer;

@@ -40,6 +40,7 @@
       <section class="matches-screen" id="matches-screen" hidden>
         <div class="matches-heading">
           <div>
+            <div class="screen-kicker">Match Center</div>
             <div class="screen-title" id="matches-heading">Сегодня</div>
             <div class="screen-date" id="matches-date">—</div>
           </div>
@@ -49,6 +50,27 @@
           <button type="button" data-day-offset="-1">Вчера</button>
           <button class="active" type="button" data-day-offset="0">Сегодня</button>
           <button type="button" data-day-offset="1">Завтра</button>
+        </div>
+
+        <div class="match-center-tools">
+          <label class="match-search">
+            <span class="visually-hidden">Поиск матчей</span>
+            <span class="match-search-icon" aria-hidden="true">⌕</span>
+            <input
+              id="match-search"
+              type="search"
+              placeholder="Команда или лига"
+              autocomplete="off"
+              enterkeyhint="search"
+            />
+          </label>
+
+          <div class="match-filters" id="match-filters" role="group" aria-label="Фильтр матчей">
+            <button class="active" type="button" data-match-filter="all">Все</button>
+            <button type="button" data-match-filter="live">LIVE</button>
+            <button type="button" data-match-filter="upcoming">Скоро</button>
+            <button type="button" data-match-filter="finished">Завершённые</button>
+          </div>
         </div>
 
         <div class="matches-state" id="matches-state">Загрузка матчей</div>

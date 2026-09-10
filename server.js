@@ -359,17 +359,19 @@ app.get("/api/matches", async (request, response) => {
     });
   }
 
-  if (!apiFootballKey) {
-    return response.status(503).json({
-      error: {
-        code: "MISSING_API_KEY",
-        message:
-          "Сервис API-Football не настроен: добавьте API_FOOTBALL_KEY в environment variables.",
-      },
-    });
-  }
+  if (!requireApiKey(response)) return;
 
   try {
+    const cacheKey = `matches:${date}`;
+    const cachedMatches = cachedValue(cacheKey);
+    if (cachedMatches !== undefined) {
+      return response.json({
+        date,
+        matches: cachedMatches,
+        apiRequestCount: 0,
+      });
+    }
+
     const url = new URL(`${apiFootballBaseUrl}/fixtures`);
     url.searchParams.set("date", date);
 
@@ -392,6 +394,16 @@ app.get("/api/matches", async (request, response) => {
           .map(normalizeMatch)
           .filter((match) => match.fixtureId !== null)
       : [];
+    const hasLiveMatches = matches.some((match) =>
+      ["1H", "HT", "2H", "ET", "BT", "P", "LIVE", "INT", "SUSP"].includes(
+        match.status.short,
+      ),
+    );
+    setCachedValue(
+      cacheKey,
+      matches,
+      hasLiveMatches ? 60 * 1000 : 10 * 60 * 1000,
+    );
 
     return response.json({
       date,
