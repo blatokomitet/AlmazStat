@@ -28,3 +28,17 @@ mtime_ms = 1788991731952
 storage_uri = "gcs://replit-rams-assets-kira/rams/assets/repl:8e15cde6-489c-49c7-9a06-bba9be55e0a9/aaf9483e-9236-426f-a40b-9834872065b3/0eb2b10f-e7ec-4d71-8763-7f22e724ec13"
 storage_version_token = "1788991755191271"
 content_type = "image/png"
+
+[[outputs]]
+id = "aUCMe9HvpA8ssjF1vb6zW"
+uri = "file://exports/AlmazStat-full-project.zip"
+type = "unspecified"
+title = "AlmazStat — полный архив проекта"
+description = "ZIP с исходниками, настройками запуска, документацией, исходным ТЗ и скриншотами. Секреты, .git и node_modules исключены."
+logical_id = "c11d4698-2e6e-42e3-814f-81aa4afe1db1"
+content_hash = "sha256:60a2a162e623a2880bb2b5fcc665df5004de492d0394c2d4a09bffcaa868a486"
+size = 322504
+mtime_ms = 1789005197423
+storage_uri = "gcs://replit-rams-assets-kira/rams/assets/repl:8e15cde6-489c-49c7-9a06-bba9be55e0a9/c11d4698-2e6e-42e3-814f-81aa4afe1db1/eb2bbe8e-d926-43c7-8581-4dd61f78ac20"
+storage_version_token = "1789005202706317"
+content_type = "application/octet-stream"
