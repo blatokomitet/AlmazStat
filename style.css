@@ -833,6 +833,10 @@ a {
   background: var(--green);
 }
 
+.source-item.unknown::before {
+  background: var(--muted);
+}
+
 .risk-note {
   margin: 16px 0 0;
   padding-top: 14px;

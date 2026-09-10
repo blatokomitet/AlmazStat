@@ -7,7 +7,7 @@ const port = Number(process.env.PORT);
 const apiFootballKey = process.env.API_FOOTBALL_KEY;
 const apiFootballBaseUrl = "https://v3.football.api-sports.io";
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
-const matchCache = new Map();
+const dataCache = new Map();
 
 if (!Number.isInteger(port) || port <= 0) {
   throw new Error("PORT environment variable must contain a valid port number.");
@@ -200,10 +200,15 @@ function normalizePrediction(prediction) {
 
 function riskFromSources(sources) {
   const totalSources = 6;
-  const availableSources = Object.values(sources).filter(Boolean).length;
-  const score = Math.round(
-    ((totalSources - availableSources) / totalSources) * 100,
+  const knownValues = Object.values(sources).filter(
+    (value) => value === true || value === false,
   );
+  const availableSources = knownValues.filter(Boolean).length;
+  const knownSources = knownValues.length;
+  const score =
+    knownSources === 0
+      ? 0
+      : Math.round(((knownSources - availableSources) / knownSources) * 100);
   return {
     score,
     level:
@@ -214,10 +219,11 @@ function riskFromSources(sources) {
           : "HIGH DATA RISK",
     availableSources,
     totalSources,
+    knownSources,
   };
 }
 
-function cacheTtl(statusShort) {
+function fixtureCacheTtl(statusShort) {
   if (["FT", "AET", "PEN"].includes(statusShort)) {
     return 24 * 60 * 60 * 1000;
   }
@@ -225,6 +231,113 @@ function cacheTtl(statusShort) {
     return 5 * 60 * 1000;
   }
   return 30 * 60 * 1000;
+}
+
+function cachedValue(key) {
+  const entry = dataCache.get(key);
+  if (!entry) return undefined;
+  if (entry.expiresAt <= Date.now()) {
+    dataCache.delete(key);
+    return undefined;
+  }
+  return entry.value;
+}
+
+function setCachedValue(key, value, ttl) {
+  dataCache.set(key, {
+    value,
+    expiresAt: Date.now() + ttl,
+  });
+  return value;
+}
+
+async function fetchApiFootball(pathname, parameters, counter) {
+  counter.count += 1;
+  const url = new URL(`${apiFootballBaseUrl}${pathname}`);
+  for (const [key, value] of Object.entries(parameters)) {
+    if (value !== null && value !== undefined && value !== "") {
+      url.searchParams.set(key, String(value));
+    }
+  }
+  const upstreamResponse = await fetch(url, {
+    headers: {
+      "x-apisports-key": apiFootballKey,
+    },
+  });
+  const payload = await upstreamResponse.json();
+  if (
+    !upstreamResponse.ok ||
+    (payload.errors && Object.keys(payload.errors).length > 0)
+  ) {
+    throw new Error("API-Football вернул ошибку.");
+  }
+  return payload.response || [];
+}
+
+function normalizeFixtureDetails(match) {
+  return {
+    fixture: {
+      id: match.fixture?.id ?? null,
+      date: match.fixture?.date ?? null,
+      timestamp: match.fixture?.timestamp ?? null,
+      status: {
+        short: match.fixture?.status?.short ?? null,
+        long: match.fixture?.status?.long ?? null,
+        elapsed: match.fixture?.status?.elapsed ?? null,
+      },
+      venue: match.fixture?.venue?.name ?? null,
+    },
+    league: {
+      id: match.league?.id ?? null,
+      name: match.league?.name ?? null,
+      country: match.league?.country ?? null,
+      logo: match.league?.logo ?? null,
+      season: match.league?.season ?? null,
+      round: match.league?.round ?? null,
+    },
+    home: {
+      id: match.teams?.home?.id ?? null,
+      name: match.teams?.home?.name ?? null,
+      logo: match.teams?.home?.logo ?? null,
+      winner: match.teams?.home?.winner ?? null,
+    },
+    away: {
+      id: match.teams?.away?.id ?? null,
+      name: match.teams?.away?.name ?? null,
+      logo: match.teams?.away?.logo ?? null,
+      winner: match.teams?.away?.winner ?? null,
+    },
+    score: {
+      home: match.goals?.home ?? null,
+      away: match.goals?.away ?? null,
+    },
+  };
+}
+
+async function getFixtureDetails(fixtureId, counter) {
+  const key = `fixture:${fixtureId}`;
+  const cached = cachedValue(key);
+  if (cached !== undefined) return cached;
+  const matches = await fetchApiFootball("/fixtures", { id: fixtureId }, counter);
+  if (!matches[0]) return null;
+  const normalized = normalizeFixtureDetails(matches[0]);
+  return setCachedValue(
+    key,
+    normalized,
+    fixtureCacheTtl(normalized.fixture.status.short),
+  );
+}
+
+function requireApiKey(response) {
+  if (apiFootballKey) return true;
+  response.status(503).json({
+    error: {
+      code: "MISSING_API_KEY",
+      message:
+        "Сервис API-Football не настроен: добавьте API_FOOTBALL_KEY в environment variables.",
+    },
+  });
+  return false;
 }
 
 app.get("/health", (_request, response) => {
@@ -308,63 +421,12 @@ app.get("/api/match", async (request, response) => {
     });
   }
 
-  if (!apiFootballKey) {
-    return response.status(503).json({
-      error: {
-        code: "MISSING_API_KEY",
-        message:
-          "Сервис API-Football не настроен: добавьте API_FOOTBALL_KEY в environment variables.",
-      },
-    });
-  }
+  if (!requireApiKey(response)) return;
 
   try {
-    const cached = matchCache.get(fixture);
-    if (cached && cached.expiresAt > Date.now()) {
-      return response.json({
-        ...cached.data,
-        meta: {
-          cached: true,
-          apiRequestCount: 0,
-        },
-      });
-    }
-    if (cached) matchCache.delete(fixture);
-
-    let apiRequestCount = 0;
-
-    async function fetchApiFootball(pathname, parameters) {
-      apiRequestCount += 1;
-      const url = new URL(`${apiFootballBaseUrl}${pathname}`);
-      for (const [key, value] of Object.entries(parameters)) {
-        if (value !== null && value !== undefined && value !== "") {
-          url.searchParams.set(key, String(value));
-        }
-      }
-
-      const upstreamResponse = await fetch(url, {
-        headers: {
-          "x-apisports-key": apiFootballKey,
-        },
-      });
-      const payload = await upstreamResponse.json();
-
-      if (
-        !upstreamResponse.ok ||
-        (payload.errors && Object.keys(payload.errors).length > 0)
-      ) {
-        const error = new Error("API-Football вернул ошибку.");
-        error.status = upstreamResponse.status;
-        throw error;
-      }
-
-      return payload;
-    }
-
-    const fixturePayload = await fetchApiFootball("/fixtures", { id: fixture });
-    const match = fixturePayload.response && fixturePayload.response[0];
-
-    if (!match) {
+    const counter = { count: 0 };
+    const fixtureData = await getFixtureDetails(fixture, counter);
+    if (!fixtureData) {
       return response.status(404).json({
         error: {
           code: "FIXTURE_NOT_FOUND",
@@ -373,130 +435,38 @@ app.get("/api/match", async (request, response) => {
       });
     }
 
-    const homeId = match.teams && match.teams.home && match.teams.home.id;
-    const awayId = match.teams && match.teams.away && match.teams.away.id;
-    const leagueId = match.league && match.league.id;
-    const season = match.league && match.league.season;
-
-    async function optionalRequest(pathname, parameters, fallback) {
+    const predictionKey = `prediction:${fixture}`;
+    let prediction = cachedValue(predictionKey);
+    if (prediction === undefined) {
       try {
-        const payload = await fetchApiFootball(pathname, parameters);
-        return payload.response || fallback;
+        const predictionResponse = await fetchApiFootball(
+          "/predictions",
+          { fixture },
+          counter,
+        );
+        prediction = normalizePrediction(predictionResponse[0]);
       } catch {
-        return fallback;
+        prediction = null;
       }
+      setCachedValue(predictionKey, prediction, 30 * 60 * 1000);
     }
 
-    const [
-      predictionResponse,
-      homeForm,
-      awayForm,
-      h2h,
-      standingsResponse,
-      odds,
-    ] = await Promise.all([
-      optionalRequest("/predictions", { fixture }, []),
-      optionalRequest("/fixtures", { team: homeId, last: 5 }, []),
-      optionalRequest("/fixtures", { team: awayId, last: 5 }, []),
-      optionalRequest(
-        "/fixtures/headtohead",
-        { h2h: `${homeId}-${awayId}`, last: 5 },
-        [],
-      ),
-      optionalRequest("/standings", { league: leagueId, season }, []),
-      optionalRequest("/odds", { fixture }, []),
-    ]);
-
-    const standingGroups =
-      standingsResponse[0] &&
-      standingsResponse[0].league &&
-      standingsResponse[0].league.standings;
-    const standingRows = Array.isArray(standingGroups)
-      ? standingGroups.flat()
-      : [];
-    const homeStanding =
-      standingRows.find((row) => row.team && row.team.id === homeId) || null;
-    const awayStanding =
-      standingRows.find((row) => row.team && row.team.id === awayId) || null;
-    const prediction = normalizePrediction(predictionResponse[0]);
-    const normalizedHomeForm = homeForm
-      .slice(0, 5)
-      .map((item) => normalizeFormMatch(item, homeId));
-    const normalizedAwayForm = awayForm
-      .slice(0, 5)
-      .map((item) => normalizeFormMatch(item, awayId));
-    const normalizedOdds = normalizeOdds(odds);
     const sources = {
       fixture: true,
       prediction: Boolean(prediction),
-      form: normalizedHomeForm.length > 0 && normalizedAwayForm.length > 0,
-      h2h: h2h.length > 0,
-      standings: Boolean(homeStanding && awayStanding),
-      odds: normalizedOdds.length > 0,
+      form: "unknown",
+      h2h: "unknown",
+      standings: "unknown",
+      odds: "unknown",
     };
-
-    const normalizedResponse = {
-      fixture: {
-        id: match.fixture?.id ?? null,
-        date: match.fixture?.date ?? null,
-        timestamp: match.fixture?.timestamp ?? null,
-        status: {
-          short: match.fixture?.status?.short ?? null,
-          long: match.fixture?.status?.long ?? null,
-          elapsed: match.fixture?.status?.elapsed ?? null,
-        },
-        venue: match.fixture?.venue?.name ?? null,
-      },
-      league: {
-        id: match.league?.id ?? null,
-        name: match.league?.name ?? null,
-        country: match.league?.country ?? null,
-        logo: match.league?.logo ?? null,
-        season: match.league?.season ?? null,
-        round: match.league?.round ?? null,
-      },
-      home: {
-        id: match.teams?.home?.id ?? null,
-        name: match.teams?.home?.name ?? null,
-        logo: match.teams?.home?.logo ?? null,
-        winner: match.teams?.home?.winner ?? null,
-      },
-      away: {
-        id: match.teams?.away?.id ?? null,
-        name: match.teams?.away?.name ?? null,
-        logo: match.teams?.away?.logo ?? null,
-        winner: match.teams?.away?.winner ?? null,
-      },
-      score: {
-        home: match.goals?.home ?? null,
-        away: match.goals?.away ?? null,
-      },
-      prediction,
-      form: {
-        home: normalizedHomeForm,
-        away: normalizedAwayForm,
-      },
-      h2h: h2h.slice(0, 5).map(normalizeH2hMatch),
-      standings: {
-        home: normalizeStanding(homeStanding),
-        away: normalizeStanding(awayStanding),
-      },
-      odds: normalizedOdds,
-      sources,
-      risk: riskFromSources(sources),
-    };
-
-    matchCache.set(fixture, {
-      data: normalizedResponse,
-      expiresAt:
-        Date.now() + cacheTtl(normalizedResponse.fixture.status.short),
-    });
 
     return response.json({
-      ...normalizedResponse,
+      ...fixtureData,
+      prediction,
+      sources,
+      risk: riskFromSources(sources),
       meta: {
-        cached: false,
-        apiRequestCount,
+        apiRequestCount: counter.count,
       },
     });
   } catch (error) {
@@ -506,6 +476,210 @@ app.get("/api/match", async (request, response) => {
         code: "UPSTREAM_UNAVAILABLE",
         message: "Не удалось связаться с API-Football.",
       },
+    });
+  }
+});
+
+app.get("/api/match/:fixture/form", async (request, response) => {
+  if (!requireApiKey(response)) return;
+  const fixtureId = String(request.params.fixture || "").trim();
+  const counter = { count: 0 };
+
+  try {
+    const fixtureData = await getFixtureDetails(fixtureId, counter);
+    if (!fixtureData) {
+      return response.status(404).json({
+        error: { code: "FIXTURE_NOT_FOUND", message: "Матч не найден." },
+      });
+    }
+
+    const key = `form:${fixtureId}`;
+    let result = cachedValue(key);
+    if (result === undefined) {
+      const safeFixtures = async (team) => {
+        try {
+          return await fetchApiFootball(
+            "/fixtures",
+            { team, last: 5 },
+            counter,
+          );
+        } catch {
+          return [];
+        }
+      };
+      const [homeMatches, awayMatches] = await Promise.all([
+        safeFixtures(fixtureData.home.id),
+        safeFixtures(fixtureData.away.id),
+      ]);
+      const form = {
+        home: homeMatches
+          .slice(0, 5)
+          .map((match) => normalizeFormMatch(match, fixtureData.home.id)),
+        away: awayMatches
+          .slice(0, 5)
+          .map((match) => normalizeFormMatch(match, fixtureData.away.id)),
+      };
+      result = {
+        form,
+        source: form.home.length > 0 && form.away.length > 0,
+      };
+      setCachedValue(key, result, 30 * 60 * 1000);
+    }
+
+    return response.json({
+      ...result,
+      meta: { apiRequestCount: counter.count },
+    });
+  } catch (error) {
+    console.error("API-Football form request failed:", error);
+    return response.status(502).json({
+      error: { code: "UPSTREAM_UNAVAILABLE", message: "Не удалось загрузить форму." },
+    });
+  }
+});
+
+app.get("/api/match/:fixture/h2h", async (request, response) => {
+  if (!requireApiKey(response)) return;
+  const fixtureId = String(request.params.fixture || "").trim();
+  const counter = { count: 0 };
+
+  try {
+    const fixtureData = await getFixtureDetails(fixtureId, counter);
+    if (!fixtureData) {
+      return response.status(404).json({
+        error: { code: "FIXTURE_NOT_FOUND", message: "Матч не найден." },
+      });
+    }
+
+    const key = `h2h:${fixtureId}`;
+    let result = cachedValue(key);
+    if (result === undefined) {
+      let matches = [];
+      try {
+        matches = await fetchApiFootball(
+          "/fixtures/headtohead",
+          { h2h: `${fixtureData.home.id}-${fixtureData.away.id}`, last: 5 },
+          counter,
+        );
+      } catch {
+        matches = [];
+      }
+      const h2h = matches.slice(0, 5).map(normalizeH2hMatch);
+      result = { h2h, source: h2h.length > 0 };
+      setCachedValue(key, result, 6 * 60 * 60 * 1000);
+    }
+
+    return response.json({
+      ...result,
+      meta: { apiRequestCount: counter.count },
+    });
+  } catch (error) {
+    console.error("API-Football H2H request failed:", error);
+    return response.status(502).json({
+      error: { code: "UPSTREAM_UNAVAILABLE", message: "Не удалось загрузить очные встречи." },
+    });
+  }
+});
+
+app.get("/api/match/:fixture/standings", async (request, response) => {
+  if (!requireApiKey(response)) return;
+  const fixtureId = String(request.params.fixture || "").trim();
+  const counter = { count: 0 };
+
+  try {
+    const fixtureData = await getFixtureDetails(fixtureId, counter);
+    if (!fixtureData) {
+      return response.status(404).json({
+        error: { code: "FIXTURE_NOT_FOUND", message: "Матч не найден." },
+      });
+    }
+
+    const key = `standings:${fixtureData.league.id}:${fixtureData.league.season}`;
+    let rows = cachedValue(key);
+    if (rows === undefined) {
+      try {
+        const standingsResponse = await fetchApiFootball(
+          "/standings",
+          {
+            league: fixtureData.league.id,
+            season: fixtureData.league.season,
+          },
+          counter,
+        );
+        const groups = standingsResponse[0]?.league?.standings;
+        rows = Array.isArray(groups)
+          ? groups.flat().map(normalizeStanding)
+          : [];
+      } catch {
+        rows = [];
+      }
+      setCachedValue(key, rows, 15 * 60 * 1000);
+    }
+
+    const home =
+      rows.find((row) => row?.team?.id === fixtureData.home.id) || null;
+    const away =
+      rows.find((row) => row?.team?.id === fixtureData.away.id) || null;
+    return response.json({
+      standings: { home, away },
+      season: fixtureData.league.season,
+      source: Boolean(home && away),
+      meta: { apiRequestCount: counter.count },
+    });
+  } catch (error) {
+    console.error("API-Football standings request failed:", error);
+    return response.status(502).json({
+      error: { code: "UPSTREAM_UNAVAILABLE", message: "Не удалось загрузить таблицу." },
+    });
+  }
+});
+
+app.get("/api/match/:fixture/odds", async (request, response) => {
+  if (!requireApiKey(response)) return;
+  const fixtureId = String(request.params.fixture || "").trim();
+  const counter = { count: 0 };
+
+  try {
+    const fixtureData = await getFixtureDetails(fixtureId, counter);
+    if (!fixtureData) {
+      return response.status(404).json({
+        error: { code: "FIXTURE_NOT_FOUND", message: "Матч не найден." },
+      });
+    }
+
+    const key = `odds:${fixtureId}`;
+    let result = cachedValue(key);
+    if (result === undefined) {
+      let oddsResponse = [];
+      try {
+        oddsResponse = await fetchApiFootball(
+          "/odds",
+          { fixture: fixtureId },
+          counter,
+        );
+      } catch {
+        oddsResponse = [];
+      }
+      const odds = normalizeOdds(oddsResponse);
+      result = { odds, source: odds.length > 0 };
+      const finished = ["FT", "AET", "PEN"].includes(
+        fixtureData.fixture.status.short,
+      );
+      setCachedValue(
+        key,
+        result,
+        finished ? 24 * 60 * 60 * 1000 : 5 * 60 * 1000,
+      );
+    }
+
+    return response.json({
+      ...result,
+      meta: { apiRequestCount: counter.count },
+    });
+  } catch (error) {
+    console.error("API-Football odds request failed:", error);
+    return response.status(502).json({
+      error: { code: "UPSTREAM_UNAVAILABLE", message: "Не удалось загрузить коэффициенты." },
     });
   }
 });

@@ -16,6 +16,18 @@
     ""
   ).trim();
   const fixtureId = fixtureFromQuery || fixtureFromTelegram;
+  const loadedSections = new Set();
+  const loadingSections = new Map();
+  let currentMatch = null;
+  let currentForm = null;
+  let sourceState = {
+    fixture: true,
+    prediction: false,
+    form: "unknown",
+    h2h: "unknown",
+    standings: "unknown",
+    odds: "unknown",
+  };
 
   const elements = {
     matchesScreen: document.getElementById("matches-screen"),
@@ -428,10 +440,113 @@
     elements.riskFill.style.width = `${score}%`;
     elements.riskSources.innerHTML = sources
       .map(
-        ([key, label]) =>
-          `<div class="source-item ${availability[key] ? "available" : ""}">${label}</div>`,
+        ([key, label]) => {
+          const stateClass =
+            availability[key] === true
+              ? "available"
+              : availability[key] === "unknown"
+                ? "unknown"
+                : "";
+          const stateLabel =
+            availability[key] === "unknown" ? " · unknown" : "";
+          return `<div class="source-item ${stateClass}">${label}${stateLabel}</div>`;
+        },
       )
       .join("");
+  }
+
+  function riskFromCurrentSources() {
+    const values = Object.values(sourceState);
+    const known = values.filter((value) => value === true || value === false);
+    const available = known.filter(Boolean).length;
+    const score =
+      known.length === 0
+        ? 0
+        : Math.round(((known.length - available) / known.length) * 100);
+    return {
+      score,
+      level:
+        score <= 33
+          ? "LOW DATA RISK"
+          : score <= 66
+            ? "MEDIUM DATA RISK"
+            : "HIGH DATA RISK",
+      availableSources: available,
+      totalSources: 6,
+      knownSources: known.length,
+    };
+  }
+
+  function refreshRisk() {
+    const risk = riskFromCurrentSources();
+    renderRisk(risk, sourceState);
+    elements.riskDescription.textContent =
+      `${risk.availableSources} из ${risk.knownSources} проверенных источников доступны`;
+  }
+
+  function renderSectionLoading(view) {
+    const loading = `<div class="empty-state">Загрузка данных</div>`;
+    if (view === "form") elements.formContent.innerHTML = loading;
+    if (view === "h2h") elements.h2hContent.innerHTML = loading;
+    if (view === "standings") elements.standingsContent.innerHTML = loading;
+    if (view === "odds") elements.oddsContent.innerHTML = loading;
+  }
+
+  function renderSectionUnavailable(view) {
+    if (view === "form") renderForm(currentMatch, { home: [], away: [] });
+    if (view === "h2h") renderH2h([]);
+    if (view === "standings") {
+      renderStandings({ home: null, away: null }, currentMatch?.league?.season);
+    }
+    if (view === "odds") renderOdds([]);
+  }
+
+  async function loadSection(view) {
+    const endpoints = {
+      form: "form",
+      h2h: "h2h",
+      standings: "standings",
+      odds: "odds",
+    };
+    const endpoint = endpoints[view];
+    if (!endpoint || loadedSections.has(view)) return;
+    if (loadingSections.has(view)) return loadingSections.get(view);
+
+    renderSectionLoading(view);
+    const loadingPromise = (async () => {
+      try {
+        const response = await fetch(
+          `/api/match/${encodeURIComponent(fixtureId)}/${endpoint}`,
+        );
+        const payload = await response.json();
+        if (!response.ok) throw new Error("Section request failed");
+
+        sourceState[view] = payload.source === true;
+        if (view === "form") {
+          currentForm = payload.form || { home: [], away: [] };
+          renderForm(currentMatch, currentForm);
+          renderMetrics(currentMatch?.prediction, currentForm);
+        }
+        if (view === "h2h") renderH2h(payload.h2h || []);
+        if (view === "standings") {
+          renderStandings(
+            payload.standings || { home: null, away: null },
+            payload.season || currentMatch?.league?.season,
+          );
+        }
+        if (view === "odds") renderOdds(payload.odds || []);
+      } catch {
+        sourceState[view] = false;
+        renderSectionUnavailable(view);
+      } finally {
+        loadedSections.add(view);
+        loadingSections.delete(view);
+        refreshRisk();
+      }
+    })();
+
+    loadingSections.set(view, loadingPromise);
+    return loadingPromise;
   }
 
   function teamLogo(team) {
@@ -594,6 +709,7 @@
         for (const view of views) {
           view.classList.toggle("active", view.id === `view-${tab.dataset.view}`);
         }
+        loadSection(tab.dataset.view);
       });
     }
   }
@@ -621,23 +737,19 @@
         throw new Error("Не удалось загрузить аналитику");
       }
 
+      currentMatch = payload;
+      currentForm = null;
+      sourceState = {
+        fixture: true,
+        prediction: Boolean(payload.prediction),
+        form: "unknown",
+        h2h: "unknown",
+        standings: "unknown",
+        odds: "unknown",
+      };
       renderFixture(payload);
-      renderPrediction(payload.prediction, payload.form);
-      renderForm(payload, payload.form);
-      renderH2h(payload.h2h);
-      renderStandings(payload.standings, payload.league?.season);
-      renderOdds(payload.odds);
-      renderRisk(
-        payload.risk,
-        payload.sources || {
-          fixture: true,
-          prediction: false,
-          form: false,
-          h2h: false,
-          standings: false,
-          odds: false,
-        },
-      );
+      renderPrediction(payload.prediction, null);
+      refreshRisk();
       elements.analysisContent.hidden = false;
       elements.analysisState.hidden = true;
       setDataStatus("live");
