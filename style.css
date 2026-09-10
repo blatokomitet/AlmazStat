@@ -290,6 +290,17 @@ a {
   color: var(--text);
 }
 
+.date-switcher button:focus-visible,
+.match-filters button:focus-visible,
+.fixture-card:focus-visible,
+.tab:focus-visible,
+.retry-button:focus-visible,
+.bottom-item:focus-visible,
+.back-link:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
 .matches-state {
   padding: 42px 12px;
   color: var(--muted);
@@ -401,6 +412,11 @@ a {
   gap: 10px;
   font-size: 13px;
   font-weight: 700;
+}
+
+.fixture-card-team span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .fixture-card-team img,
@@ -557,6 +573,7 @@ a {
 
 .tab {
   flex: 0 0 auto;
+  min-height: 44px;
   padding: 10px 14px;
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -722,7 +739,6 @@ a {
   background: var(--surface);
 }
 
-.form-row,
 .list-row {
   display: flex;
   align-items: center;
@@ -732,12 +748,10 @@ a {
   border-bottom: 1px solid var(--line);
 }
 
-.form-row:last-child,
 .list-row:last-child {
   border-bottom: 0;
 }
 
-.form-team,
 .list-primary {
   min-width: 0;
   font-size: 13px;
@@ -778,12 +792,6 @@ a {
 .form-match-score {
   font-size: 12px;
   font-weight: 800;
-}
-
-.form-results {
-  display: flex;
-  flex: 0 0 auto;
-  gap: 5px;
 }
 
 .result {
@@ -846,6 +854,8 @@ a {
 }
 
 .standing-team {
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-size: 14px;
   font-weight: 800;
 }
@@ -894,6 +904,10 @@ a {
 .risk-level {
   min-width: 0;
   gap: 10px;
+}
+
+.risk-text {
+  min-width: 0;
 }
 
 .risk-icon {
@@ -979,15 +993,23 @@ a {
   line-height: 1.5;
 }
 
-.page-error {
-  margin-top: 22px;
-  padding: 16px;
-  border: 1px solid rgba(255, 100, 124, 0.2);
-  border-radius: 16px;
-  background: rgba(255, 100, 124, 0.08);
-  color: var(--red);
-  font-size: 12px;
-  line-height: 1.5;
+.request-error {
+  padding: 24px 12px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.retry-button {
+  min-height: 44px;
+  margin-top: 14px;
+  padding: 0 18px;
+  border: 1px solid rgba(101, 119, 255, 0.35);
+  border-radius: 12px;
+  background: rgba(101, 119, 255, 0.14);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 700;
 }
 
 .bottom {

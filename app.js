@@ -17,6 +17,7 @@
   ).trim();
   const fixtureId = fixtureFromQuery || fixtureFromTelegram;
   const loadedSections = new Set();
+  const failedSections = new Set();
   const loadingSections = new Map();
   let currentMatch = null;
   let currentForm = null;
@@ -94,7 +95,6 @@
     riskScore: document.getElementById("risk-score"),
     riskFill: document.getElementById("risk-fill"),
     riskSources: document.getElementById("risk-sources"),
-    pageError: document.getElementById("page-error"),
   };
 
   function escapeHtml(value) {
@@ -114,12 +114,6 @@
     };
     elements.dataStatus.dataset.state = state;
     elements.dataStatusText.textContent = labels[state];
-  }
-
-  function showError(message) {
-    elements.pageError.textContent = message;
-    elements.pageError.hidden = false;
-    setDataStatus("error");
   }
 
   function formatDate(value, compact) {
@@ -178,10 +172,14 @@
   }
 
   function saveMatchCenterState() {
-    sessionStorage.setItem(
-      matchCenterStateKey,
-      JSON.stringify({ selectedDate, selectedFilter, searchQuery }),
-    );
+    try {
+      sessionStorage.setItem(
+        matchCenterStateKey,
+        JSON.stringify({ selectedDate, selectedFilter, searchQuery }),
+      );
+    } catch {
+      // Match Center remains usable when browser storage is unavailable.
+    }
   }
 
   function formatMatchDay(value) {
@@ -392,6 +390,11 @@
   }
 
   function renderForm(match, form) {
+    if (!(form?.home?.length || form?.away?.length)) {
+      elements.formContent.innerHTML =
+        `<div class="empty-state">Форма команд недоступна</div>`;
+      return;
+    }
     elements.formContent.innerHTML =
       renderFormRow(match.home, form && form.home) +
       renderFormRow(match.away, form && form.away);
@@ -561,7 +564,35 @@
     if (view === "odds") renderOdds([]);
   }
 
-  async function loadSection(view) {
+  function renderRetry(container, message, retry) {
+    container.innerHTML = `
+      <div class="request-error">
+        <div>${escapeHtml(message)}</div>
+        <button class="retry-button" type="button">Повторить</button>
+      </div>
+    `;
+    container
+      .querySelector(".retry-button")
+      .addEventListener("click", retry, { once: true });
+  }
+
+  function renderSectionError(view) {
+    const containers = {
+      form: elements.formContent,
+      h2h: elements.h2hContent,
+      standings: elements.standingsContent,
+      odds: elements.oddsContent,
+    };
+    const messages = {
+      form: "Не удалось загрузить форму команд",
+      h2h: "Не удалось загрузить очные встречи",
+      standings: "Не удалось загрузить турнирную таблицу",
+      odds: "Не удалось загрузить коэффициенты",
+    };
+    renderRetry(containers[view], messages[view], () => loadSection(view, true));
+  }
+
+  async function loadSection(view, retryFailed = false) {
     const endpoints = {
       form: "form",
       h2h: "h2h",
@@ -569,11 +600,19 @@
       odds: "odds",
     };
     const endpoint = endpoints[view];
-    if (!endpoint || loadedSections.has(view)) return;
+    if (
+      !endpoint ||
+      loadedSections.has(view) ||
+      (failedSections.has(view) && !retryFailed)
+    ) {
+      return;
+    }
     if (loadingSections.has(view)) return loadingSections.get(view);
+    if (retryFailed) failedSections.delete(view);
 
     renderSectionLoading(view);
     const loadingPromise = (async () => {
+      let succeeded = false;
       try {
         const response = await fetch(
           `/api/match/${encodeURIComponent(fixtureId)}/${endpoint}`,
@@ -595,11 +634,14 @@
           );
         }
         if (view === "odds") renderOdds(payload.odds || []);
+        failedSections.delete(view);
+        succeeded = true;
       } catch {
         sourceState[view] = false;
-        renderSectionUnavailable(view);
+        failedSections.add(view);
+        renderSectionError(view);
       } finally {
-        loadedSections.add(view);
+        if (succeeded) loadedSections.add(view);
         loadingSections.delete(view);
         refreshRisk();
       }
@@ -832,8 +874,10 @@
       if (requestSequence !== matchesLoadSequence) return;
       allMatches = [];
       elements.matchesList.replaceChildren();
-      elements.matchesState.textContent = "Не удалось загрузить матчи";
       elements.matchesState.hidden = false;
+      renderRetry(elements.matchesState, "Не удалось загрузить матчи", () =>
+        loadMatches(selectedDate),
+      );
       setDataStatus("error");
     }
   }
@@ -867,7 +911,11 @@
 
     for (const tab of tabs) {
       tab.addEventListener("click", function () {
-        for (const item of tabs) item.classList.toggle("active", item === tab);
+        for (const item of tabs) {
+          const active = item === tab;
+          item.classList.toggle("active", active);
+          item.setAttribute("aria-selected", String(active));
+        }
         for (const view of views) {
           view.classList.toggle("active", view.id === `view-${tab.dataset.view}`);
         }
@@ -881,7 +929,6 @@
     elements.analysisState.textContent = "Загрузка аналитики";
     elements.analysisState.hidden = false;
     elements.analysisContent.hidden = true;
-    elements.pageError.hidden = true;
 
     try {
       const response = await fetch(`/api/match?fixture=${encodeURIComponent(fixtureId)}`);
@@ -916,9 +963,13 @@
       elements.analysisState.hidden = true;
       setDataStatus("live");
     } catch {
-      elements.analysisState.textContent = "Не удалось загрузить аналитику";
       elements.analysisState.hidden = false;
       elements.analysisContent.hidden = true;
+      renderRetry(
+        elements.analysisState,
+        "Не удалось загрузить аналитику",
+        loadMatch,
+      );
       setDataStatus("error");
     }
   }

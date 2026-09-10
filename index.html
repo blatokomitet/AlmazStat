@@ -114,16 +114,16 @@
         </div>
       </section>
 
-      <nav class="tabs" aria-label="Разделы матча">
-        <button class="tab active" type="button" data-view="overview">Обзор</button>
-        <button class="tab" type="button" data-view="form">Форма</button>
-        <button class="tab" type="button" data-view="h2h">Очные</button>
-        <button class="tab" type="button" data-view="standings">Таблица</button>
-        <button class="tab" type="button" data-view="odds">Коэффициенты</button>
-        <button class="tab" type="button" data-view="risk">Риск</button>
+      <nav class="tabs" role="tablist" aria-label="Разделы матча">
+        <button class="tab active" type="button" role="tab" aria-selected="true" aria-controls="view-overview" data-view="overview">Обзор</button>
+        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="view-form" data-view="form">Форма</button>
+        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="view-h2h" data-view="h2h">Очные</button>
+        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="view-standings" data-view="standings">Таблица</button>
+        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="view-odds" data-view="odds">Коэффициенты</button>
+        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="view-risk" data-view="risk">Риск</button>
       </nav>
 
-      <div id="view-overview" class="content-view active">
+      <div id="view-overview" class="content-view active" role="tabpanel">
         <section class="section">
           <div class="section-head">
             <div class="section-title">Главный прогноз</div>
@@ -171,7 +171,7 @@
         </section>
       </div>
 
-      <div id="view-form" class="content-view">
+      <div id="view-form" class="content-view" role="tabpanel">
         <section class="section">
           <div class="section-head">
             <div class="section-title">Последняя форма</div>
@@ -181,7 +181,7 @@
         </section>
       </div>
 
-      <div id="view-h2h" class="content-view">
+      <div id="view-h2h" class="content-view" role="tabpanel">
         <section class="section">
           <div class="section-head">
             <div class="section-title">Очные встречи</div>
@@ -191,7 +191,7 @@
         </section>
       </div>
 
-      <div id="view-standings" class="content-view">
+      <div id="view-standings" class="content-view" role="tabpanel">
         <section class="section">
           <div class="section-head">
             <div class="section-title">Таблица</div>
@@ -201,7 +201,7 @@
         </section>
       </div>
 
-      <div id="view-odds" class="content-view">
+      <div id="view-odds" class="content-view" role="tabpanel">
         <section class="section">
           <div class="section-head">
             <div class="section-title">Коэффициенты</div>
@@ -211,7 +211,7 @@
         </section>
       </div>
 
-      <div id="view-risk" class="content-view">
+      <div id="view-risk" class="content-view" role="tabpanel">
         <section class="section">
           <div class="section-head">
             <div class="section-title">Data Quality Risk</div>
@@ -240,7 +240,6 @@
         </section>
       </div>
 
-      <div class="page-error" id="page-error" hidden></div>
         </div>
       </section>
     </main>

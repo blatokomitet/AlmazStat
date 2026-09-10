@@ -260,6 +260,7 @@ async function fetchApiFootball(pathname, parameters, counter) {
     }
   }
   const upstreamResponse = await fetch(url, {
+    signal: AbortSignal.timeout(12000),
     headers: {
       "x-apisports-key": apiFootballKey,
     },
@@ -376,6 +377,7 @@ app.get("/api/matches", async (request, response) => {
     url.searchParams.set("date", date);
 
     const upstreamResponse = await fetch(url, {
+      signal: AbortSignal.timeout(12000),
       headers: {
         "x-apisports-key": apiFootballKey,
       },
@@ -450,6 +452,7 @@ app.get("/api/match", async (request, response) => {
     const predictionKey = `prediction:${fixture}`;
     let prediction = cachedValue(predictionKey);
     if (prediction === undefined) {
+      let predictionLoaded = false;
       try {
         const predictionResponse = await fetchApiFootball(
           "/predictions",
@@ -457,10 +460,13 @@ app.get("/api/match", async (request, response) => {
           counter,
         );
         prediction = normalizePrediction(predictionResponse[0]);
+        predictionLoaded = true;
       } catch {
         prediction = null;
       }
-      setCachedValue(predictionKey, prediction, 30 * 60 * 1000);
+      if (predictionLoaded) {
+        setCachedValue(predictionKey, prediction, 30 * 60 * 1000);
+      }
     }
 
     const sources = {
@@ -508,20 +514,17 @@ app.get("/api/match/:fixture/form", async (request, response) => {
     const key = `form:${fixtureId}`;
     let result = cachedValue(key);
     if (result === undefined) {
-      const safeFixtures = async (team) => {
-        try {
-          return await fetchApiFootball(
-            "/fixtures",
-            { team, last: 5 },
-            counter,
-          );
-        } catch {
-          return [];
-        }
-      };
       const [homeMatches, awayMatches] = await Promise.all([
-        safeFixtures(fixtureData.home.id),
-        safeFixtures(fixtureData.away.id),
+        fetchApiFootball(
+          "/fixtures",
+          { team: fixtureData.home.id, last: 5 },
+          counter,
+        ),
+        fetchApiFootball(
+          "/fixtures",
+          { team: fixtureData.away.id, last: 5 },
+          counter,
+        ),
       ]);
       const form = {
         home: homeMatches
@@ -546,6 +549,7 @@ app.get("/api/match/:fixture/form", async (request, response) => {
     console.error("API-Football form request failed:", error);
     return response.status(502).json({
       error: { code: "UPSTREAM_UNAVAILABLE", message: "Не удалось загрузить форму." },
+      meta: { apiRequestCount: counter.count },
     });
   }
 });
@@ -566,16 +570,11 @@ app.get("/api/match/:fixture/h2h", async (request, response) => {
     const key = `h2h:${fixtureId}`;
     let result = cachedValue(key);
     if (result === undefined) {
-      let matches = [];
-      try {
-        matches = await fetchApiFootball(
-          "/fixtures/headtohead",
-          { h2h: `${fixtureData.home.id}-${fixtureData.away.id}`, last: 5 },
-          counter,
-        );
-      } catch {
-        matches = [];
-      }
+      const matches = await fetchApiFootball(
+        "/fixtures/headtohead",
+        { h2h: `${fixtureData.home.id}-${fixtureData.away.id}`, last: 5 },
+        counter,
+      );
       const h2h = matches.slice(0, 5).map(normalizeH2hMatch);
       result = { h2h, source: h2h.length > 0 };
       setCachedValue(key, result, 6 * 60 * 60 * 1000);
@@ -589,6 +588,7 @@ app.get("/api/match/:fixture/h2h", async (request, response) => {
     console.error("API-Football H2H request failed:", error);
     return response.status(502).json({
       error: { code: "UPSTREAM_UNAVAILABLE", message: "Не удалось загрузить очные встречи." },
+      meta: { apiRequestCount: counter.count },
     });
   }
 });
@@ -609,22 +609,18 @@ app.get("/api/match/:fixture/standings", async (request, response) => {
     const key = `standings:${fixtureData.league.id}:${fixtureData.league.season}`;
     let rows = cachedValue(key);
     if (rows === undefined) {
-      try {
-        const standingsResponse = await fetchApiFootball(
-          "/standings",
-          {
-            league: fixtureData.league.id,
-            season: fixtureData.league.season,
-          },
-          counter,
-        );
-        const groups = standingsResponse[0]?.league?.standings;
-        rows = Array.isArray(groups)
-          ? groups.flat().map(normalizeStanding)
-          : [];
-      } catch {
-        rows = [];
-      }
+      const standingsResponse = await fetchApiFootball(
+        "/standings",
+        {
+          league: fixtureData.league.id,
+          season: fixtureData.league.season,
+        },
+        counter,
+      );
+      const groups = standingsResponse[0]?.league?.standings;
+      rows = Array.isArray(groups)
+        ? groups.flat().map(normalizeStanding)
+        : [];
       setCachedValue(key, rows, 15 * 60 * 1000);
     }
 
@@ -642,6 +638,7 @@ app.get("/api/match/:fixture/standings", async (request, response) => {
     console.error("API-Football standings request failed:", error);
     return response.status(502).json({
       error: { code: "UPSTREAM_UNAVAILABLE", message: "Не удалось загрузить таблицу." },
+      meta: { apiRequestCount: counter.count },
     });
   }
 });
@@ -662,16 +659,11 @@ app.get("/api/match/:fixture/odds", async (request, response) => {
     const key = `odds:${fixtureId}`;
     let result = cachedValue(key);
     if (result === undefined) {
-      let oddsResponse = [];
-      try {
-        oddsResponse = await fetchApiFootball(
-          "/odds",
-          { fixture: fixtureId },
-          counter,
-        );
-      } catch {
-        oddsResponse = [];
-      }
+      const oddsResponse = await fetchApiFootball(
+        "/odds",
+        { fixture: fixtureId },
+        counter,
+      );
       const odds = normalizeOdds(oddsResponse);
       result = { odds, source: odds.length > 0 };
       const finished = ["FT", "AET", "PEN"].includes(
@@ -692,6 +684,7 @@ app.get("/api/match/:fixture/odds", async (request, response) => {
     console.error("API-Football odds request failed:", error);
     return response.status(502).json({
       error: { code: "UPSTREAM_UNAVAILABLE", message: "Не удалось загрузить коэффициенты." },
+      meta: { apiRequestCount: counter.count },
     });
   }
 });
