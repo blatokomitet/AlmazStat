@@ -1,0 +1,27 @@
+name: Package FPS archive
+
+on:
+  push:
+    branches:
+      - package/fps-archive
+  workflow_dispatch:
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build archive
+        run: |
+          mkdir -p dist
+          zip -qr dist/AlmazStat-FPS.zip . \
+            -x '.git/*' \
+               '.github/workflows/package-fps.yml' \
+               'dist/*' \
+               'node_modules/*'
+      - name: Upload archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: AlmazStat-FPS
+          path: dist/AlmazStat-FPS.zip
+          if-no-files-found: error
