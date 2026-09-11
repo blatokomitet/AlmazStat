@@ -1,0 +1,43 @@
+name: Data integrity pass
+
+on:
+  push:
+    branches:
+      - fix/data-integrity-pass-1
+    paths:
+      - scripts/apply-data-integrity-pass.mjs
+      - .github/workflows/data-integrity-pass.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/data-integrity-pass-1
+          fetch-depth: 0
+
+      - name: Apply patch
+        run: node scripts/apply-data-integrity-pass.mjs
+
+      - name: Validate server syntax
+        run: node --check server.js
+
+      - name: Validate diff
+        run: git diff --check
+
+      - name: Commit patched server
+        run: |
+          if git diff --quiet -- server.js; then
+            echo "No server.js changes to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add server.js
+          git commit -m "Add match data integrity states"
+          git push origin HEAD:fix/data-integrity-pass-1
