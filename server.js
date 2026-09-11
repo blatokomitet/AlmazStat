@@ -718,6 +718,12 @@ function riskFromSources(sources) {
   };
 }
 
+function matchDataIntegrityState(upstreamCount, normalizedCount) {
+  if (normalizedCount > 0) return "available";
+  if (upstreamCount === 0) return "provider_empty";
+  return "normalization_failed";
+}
+
 function fixtureCacheTtl(statusShort) {
   if (["FT", "AET", "PEN"].includes(statusShort)) {
     return 24 * 60 * 60 * 1000;
@@ -2197,25 +2203,51 @@ app.get("/api/match/:fixture/statistics", async (request, response) => {
     if (!fixtureData) {
       return response.status(404).json({
         error: { code: "FIXTURE_NOT_FOUND", message: "Матч не найден." },
-        meta: { apiRequestCount: counter.count },
+        meta: apiMeta(counter),
       });
     }
 
     const key = `statistics:${fixtureId}`;
     let result = cachedValue(key);
+    let rateLimit = null;
     if (result === undefined) {
-      const statisticsResponse = await fetchApiFootball(
+      const payload = await fetchApiFootballPayload(
         "/fixtures/statistics",
         { fixture: fixtureId },
         counter,
       );
-      const statistics = normalizeFixtureStatistics(
-        statisticsResponse,
-        fixtureData,
+      rateLimit = payload.rateLimit;
+      const upstreamRows = Array.isArray(payload.response) ? payload.response : [];
+      const statistics = normalizeFixtureStatistics(upstreamRows, fixtureData);
+      const dataState = matchDataIntegrityState(
+        upstreamRows.length,
+        statistics.rows.length,
       );
+
+      if (dataState === "normalization_failed") {
+        console.error("Fixture statistics normalization failed", {
+          fixtureId,
+          upstreamCount: upstreamRows.length,
+          normalizedCount: statistics.rows.length,
+        });
+        return response.status(502).json({
+          error: {
+            code: "NORMALIZATION_FAILED",
+            message: "Не удалось обработать статистику матча.",
+          },
+          dataState,
+          meta: {
+            ...apiMeta(counter, rateLimit),
+            upstreamCount: upstreamRows.length,
+            normalizedCount: statistics.rows.length,
+          },
+        });
+      }
+
       result = {
         statistics,
-        source: statistics.rows.length > 0,
+        source: dataState === "available",
+        dataState,
       };
       setCachedValue(
         key,
@@ -2226,7 +2258,7 @@ app.get("/api/match/:fixture/statistics", async (request, response) => {
 
     return response.json({
       ...result,
-      meta: { apiRequestCount: counter.count },
+      meta: apiMeta(counter, rateLimit),
     });
   } catch (error) {
     console.error("API-Football statistics request failed:", error);
@@ -2235,7 +2267,7 @@ app.get("/api/match/:fixture/statistics", async (request, response) => {
         code: "UPSTREAM_UNAVAILABLE",
         message: "Не удалось получить статистику.",
       },
-      meta: { apiRequestCount: counter.count },
+      meta: apiMeta(counter),
     });
   }
 });
@@ -2250,23 +2282,49 @@ app.get("/api/match/:fixture/events", async (request, response) => {
     if (!fixtureData) {
       return response.status(404).json({
         error: { code: "FIXTURE_NOT_FOUND", message: "Матч не найден." },
-        meta: { apiRequestCount: counter.count },
+        meta: apiMeta(counter),
       });
     }
 
     const key = `events:${fixtureId}`;
     let result = cachedValue(key);
+    let rateLimit = null;
     if (result === undefined) {
-      const eventsResponse = await fetchApiFootball(
+      const payload = await fetchApiFootballPayload(
         "/fixtures/events",
         { fixture: fixtureId },
         counter,
       );
-      const events = normalizeFixtureEvents(eventsResponse);
+      rateLimit = payload.rateLimit;
+      const upstreamRows = Array.isArray(payload.response) ? payload.response : [];
+      const events = normalizeFixtureEvents(upstreamRows);
+      const dataState = matchDataIntegrityState(upstreamRows.length, events.length);
+
+      if (dataState === "normalization_failed") {
+        console.error("Fixture events normalization failed", {
+          fixtureId,
+          upstreamCount: upstreamRows.length,
+          normalizedCount: events.length,
+        });
+        return response.status(502).json({
+          error: {
+            code: "NORMALIZATION_FAILED",
+            message: "Не удалось обработать события матча.",
+          },
+          dataState,
+          meta: {
+            ...apiMeta(counter, rateLimit),
+            upstreamCount: upstreamRows.length,
+            normalizedCount: events.length,
+          },
+        });
+      }
+
       result = {
         events,
         status: fixtureData.fixture.status,
-        source: events.length > 0,
+        source: dataState === "available",
+        dataState,
       };
       setCachedValue(
         key,
@@ -2277,7 +2335,7 @@ app.get("/api/match/:fixture/events", async (request, response) => {
 
     return response.json({
       ...result,
-      meta: { apiRequestCount: counter.count },
+      meta: apiMeta(counter, rateLimit),
     });
   } catch (error) {
     console.error("API-Football events request failed:", error);
@@ -2286,7 +2344,7 @@ app.get("/api/match/:fixture/events", async (request, response) => {
         code: "UPSTREAM_UNAVAILABLE",
         message: "Не удалось получить события матча.",
       },
-      meta: { apiRequestCount: counter.count },
+      meta: apiMeta(counter),
     });
   }
 });
@@ -2315,11 +2373,36 @@ app.get("/api/match/:fixture/lineups", async (request, response) => {
         counter,
       );
       rateLimit = payload.rateLimit;
-      const lineups = normalizeFixtureLineups(payload.response, fixtureData);
+      const upstreamRows = Array.isArray(payload.response) ? payload.response : [];
+      const lineups = normalizeFixtureLineups(upstreamRows, fixtureData);
+      const normalizedCount = Number(Boolean(lineups.home)) + Number(Boolean(lineups.away));
+      const dataState = matchDataIntegrityState(upstreamRows.length, normalizedCount);
+
+      if (dataState === "normalization_failed") {
+        console.error("Fixture lineups normalization failed", {
+          fixtureId,
+          upstreamCount: upstreamRows.length,
+          normalizedCount,
+        });
+        return response.status(502).json({
+          error: {
+            code: "NORMALIZATION_FAILED",
+            message: "Не удалось обработать составы матча.",
+          },
+          dataState,
+          meta: {
+            ...apiMeta(counter, rateLimit),
+            upstreamCount: upstreamRows.length,
+            normalizedCount,
+          },
+        });
+      }
+
       result = {
         lineups,
         status: fixtureData.fixture.status,
-        source: Boolean(lineups.home || lineups.away),
+        source: dataState === "available",
+        dataState,
       };
       setCachedValue(
         key,
