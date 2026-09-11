@@ -1,0 +1,40 @@
+name: Show all live matches on dashboard
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/show-all-live-dashboard.yml
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Show every live fixture first on home
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('app.js')
+          s=p.read_text()
+          old='''      const block = (items, empty) => items.length ? `<div class="dashboard-fixtures">${items.slice(0, 6).map((item) => dashboardFixtureButton(item)).join("")}</div>` : `<div class="dashboard-empty"><strong>${empty}</strong></div>`;
+      renderDashboardBlock("live", block(live, "Сейчас матчей нет"));'''
+          new='''      const block = (items, empty, limit = 6) => items.length ? `<div class="dashboard-fixtures">${(limit === null ? items : items.slice(0, limit)).map((item) => dashboardFixtureButton(item)).join("")}</div>` : `<div class="dashboard-empty"><strong>${empty}</strong></div>`;
+      renderDashboardBlock("live", block(live, "Сейчас матчей нет", null));'''
+          if old not in s:
+              raise SystemExit('dashboard block marker not found')
+          s=s.replace(old,new,1)
+          p.write_text(s)
+          PY
+          node --check app.js
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app.js
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "feat: show all live matches on home dashboard"
+          git push
