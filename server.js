@@ -1,11 +1,14 @@
 import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createSportmonksProvider } from "./lib/sportmonks-provider.js";
 
 const app = express();
 const port = Number(process.env.PORT);
 const apiFootballKey = process.env.API_FOOTBALL_KEY;
+const sportmonksToken = process.env.SPORTMONKS_API_TOKEN;
 const apiFootballBaseUrl = "https://v3.football.api-sports.io";
+const sportmonksProvider = createSportmonksProvider({ token: sportmonksToken });
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 const dataCache = new Map();
 const apiFootballInflight = new Map();
@@ -1877,18 +1880,52 @@ app.get("/api/matches", async (request, response) => {
     });
   }
 
-  if (!requireApiKey(response)) return;
+  if (!sportmonksToken && !apiFootballKey) {
+    return response.status(503).json({
+      error: {
+        code: "FOOTBALL_PROVIDER_NOT_CONFIGURED",
+        message: "Источник футбольных данных не настроен.",
+      },
+    });
+  }
 
   const counter = { count: 0 };
   try {
-    const cacheKey = `matches:${date}`;
+    const cacheKey = `matches:${date}:provider-v2`;
     const cachedMatches = cachedValue(cacheKey);
     if (cachedMatches !== undefined) {
       return response.json({
         date,
-        matches: cachedMatches,
+        matches: cachedMatches.matches,
+        provider: cachedMatches.provider,
         apiRequestCount: 0,
       });
+    }
+
+    if (sportmonksToken) {
+      try {
+        const result = await sportmonksProvider.fixturesByDate(date);
+        const matches = Array.isArray(result.matches) ? result.matches : [];
+        const hasLiveMatches = matches.some((match) =>
+          ["1H", "HT", "2H", "ET", "BT", "P", "LIVE", "INT", "SUSP"].includes(
+            match.status?.short,
+          ),
+        );
+        setCachedValue(
+          cacheKey,
+          { matches, provider: "sportmonks" },
+          hasLiveMatches ? 60 * 1000 : 10 * 60 * 1000,
+        );
+        return response.json({
+          date,
+          matches,
+          provider: "sportmonks",
+          apiRequestCount: 1,
+        });
+      } catch (error) {
+        console.error("Sportmonks matches request failed:", error?.message || error);
+        if (!apiFootballKey) throw error;
+      }
     }
 
     const payload = await fetchApiFootballPayload("/fixtures", { date }, counter);
@@ -1904,17 +1941,18 @@ app.get("/api/matches", async (request, response) => {
     );
     setCachedValue(
       cacheKey,
-      matches,
+      { matches, provider: "api-football" },
       hasLiveMatches ? 60 * 1000 : 10 * 60 * 1000,
     );
 
     return response.json({
       date,
       matches,
+      provider: "api-football",
       apiRequestCount: counter.count,
     });
   } catch (error) {
-    console.error("API-Football matches request failed:", error);
+    console.error("Football matches request failed:", error);
     return response.status(502).json({
       error: {
         code: "UPSTREAM_UNAVAILABLE",
@@ -1936,7 +1974,60 @@ app.get("/api/match", async (request, response) => {
     });
   }
 
-  if (!requireApiKey(response)) return;
+  if (!sportmonksToken && !apiFootballKey) {
+    return response.status(503).json({
+      error: {
+        code: "FOOTBALL_PROVIDER_NOT_CONFIGURED",
+        message: "Источник футбольных данных не настроен.",
+      },
+    });
+  }
+
+  if (sportmonksToken) {
+    try {
+      const result = await sportmonksProvider.fixtureById(fixture);
+      if (result?.fixture) {
+        const sources = {
+          fixture: true,
+          prediction: false,
+          statistics: "unknown",
+          events: "unknown",
+          lineups: "unknown",
+          form: "unknown",
+          h2h: "unknown",
+          standings: "unknown",
+          odds: "unknown",
+        };
+        return response.json({
+          ...result.fixture,
+          prediction: null,
+          sources,
+          risk: riskFromSources(sources),
+          provider: "sportmonks",
+          meta: { apiRequestCount: 1 },
+        });
+      }
+    } catch (error) {
+      console.error("Sportmonks fixture request failed:", error?.message || error);
+      if (!apiFootballKey) {
+        return response.status(502).json({
+          error: {
+            code: "UPSTREAM_UNAVAILABLE",
+            message: "Не удалось связаться со Sportmonks.",
+          },
+        });
+      }
+    }
+  }
+
+  if (!apiFootballKey) {
+    return response.status(404).json({
+      error: {
+        code: "FIXTURE_NOT_FOUND",
+        message: "Матч с указанным fixture ID не найден.",
+      },
+    });
+  }
 
   try {
     const counter = { count: 0 };
@@ -1987,6 +2078,7 @@ app.get("/api/match", async (request, response) => {
       prediction,
       sources,
       risk: riskFromSources(sources),
+      provider: "api-football",
       meta: {
         apiRequestCount: counter.count,
       },

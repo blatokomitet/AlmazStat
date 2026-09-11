@@ -4,7 +4,8 @@
   "description": "Telegram Mini App foundation for football analytics",
   "scripts": {
     "start": "node server.js",
-    "prod": "NODE_ENV=production node server.js"
+    "prod": "NODE_ENV=production node server.js",
+    "check:sportmonks": "node scripts/check-sportmonks.js"
   },
   "private": true,
   "type": "module",
