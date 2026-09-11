@@ -2292,8 +2292,55 @@ app.get("/api/match/:fixture/h2h", async (request, response) => {
 });
 
 app.get("/api/match/:fixture/standings", async (request, response) => {
-  if (!requireApiKey(response)) return;
   const fixtureId = String(request.params.fixture || "").trim();
+
+  if (sportmonksToken) {
+    try {
+      const key = "sportmonks:standings:" + fixtureId;
+      let result = cachedValue(key);
+
+      if (result === undefined) {
+        const centre = await getSportmonksMatchCentre(fixtureId);
+        const seasonId = centre?.league?.season;
+        if (!centre?.home?.id || !centre?.away?.id || !seasonId) {
+          return response.status(404).json({
+            error: { code: "FIXTURE_NOT_FOUND", message: "Матч не найден." },
+          });
+        }
+
+        const table = await sportmonksProvider.standingsBySeason(seasonId);
+        const rows = Array.isArray(table?.standings) ? table.standings : [];
+        const home =
+          rows.find((row) => Number(row?.team?.id) === Number(centre.home.id)) || null;
+        const away =
+          rows.find((row) => Number(row?.team?.id) === Number(centre.away.id)) || null;
+
+        result = {
+          standings: { home, away },
+          season: seasonId,
+          source: Boolean(home && away),
+          provider: "sportmonks",
+        };
+        setCachedValue(key, result, 15 * 60 * 1000);
+      }
+
+      return response.json({
+        ...result,
+        meta: { apiRequestCount: 2 },
+      });
+    } catch (error) {
+      console.error("Sportmonks standings request failed:", error?.message || error);
+      if (!apiFootballKey) {
+        return response.status(502).json({
+          error: { code: "UPSTREAM_UNAVAILABLE", message: "Не удалось загрузить таблицу." },
+          provider: "sportmonks",
+          meta: { apiRequestCount: 0 },
+        });
+      }
+    }
+  }
+
+  if (!requireApiKey(response)) return;
   const counter = { count: 0 };
 
   try {
@@ -2304,7 +2351,7 @@ app.get("/api/match/:fixture/standings", async (request, response) => {
       });
     }
 
-    const key = `standings:${fixtureData.league.id}:${fixtureData.league.season}`;
+    const key = "standings:" + fixtureData.league.id + ":" + fixtureData.league.season;
     let rows = cachedValue(key);
     if (rows === undefined) {
       const standingsResponse = await fetchApiFootball(
@@ -2330,6 +2377,7 @@ app.get("/api/match/:fixture/standings", async (request, response) => {
       standings: { home, away },
       season: fixtureData.league.season,
       source: Boolean(home && away),
+      provider: "api-football",
       meta: { apiRequestCount: counter.count },
     });
   } catch (error) {
