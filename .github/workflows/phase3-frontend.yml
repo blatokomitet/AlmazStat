@@ -1,0 +1,150 @@
+name: Phase 3 frontend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/phase3-frontend.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch frontend
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          index = Path('index.html')
+          html = index.read_text()
+
+          old = '''        <div class="status" id="data-status" data-state="loading" role="status">
+          <span class="status-dot"></span>
+          <span id="data-status-text">ЗАГРУЗКА</span>
+        </div>'''
+          new = '''        <div class="header-actions">
+          <div class="language-switch" role="group" aria-label="Language / Язык">
+            <button type="button" class="language-option active" data-language="ru" aria-pressed="true">РУС</button>
+            <button type="button" class="language-option" data-language="en" aria-pressed="false">ENG</button>
+          </div>
+          <div class="status" id="data-status" data-state="loading" role="status">
+            <span class="status-dot"></span>
+            <span id="data-status-text">ЗАГРУЗКА</span>
+          </div>
+        </div>'''
+          if old in html:
+            html = html.replace(old, new, 1)
+
+          html = html.replace('<div class="section-label">Прогноз API-Football</div>', '<div class="section-label">Источник данных</div>', 1)
+          index.write_text(html)
+
+          css = Path('style.css')
+          style = css.read_text()
+          marker = '/* Phase 3 language switch */'
+          if marker not in style:
+            style += '''\n\n/* Phase 3 language switch */\n.header-actions { display:flex; align-items:center; gap:10px; }\n.language-switch { display:flex; padding:3px; border:1px solid rgba(255,255,255,.08); border-radius:10px; background:#101219; }\n.language-option { border:0; background:transparent; color:#858b99; font:inherit; font-size:11px; font-weight:700; letter-spacing:.04em; padding:6px 8px; border-radius:7px; cursor:pointer; }\n.language-option.active { background:#1b1e29; color:#f5f7fb; }\n@media (max-width:520px) { .header-actions { gap:6px; } .language-option { padding:5px 7px; } }\n'''
+          css.write_text(style)
+
+          app = Path('app.js')
+          js = app.read_text()
+          insert_after = '  const params = new URLSearchParams(window.location.search);\n'
+          i18n = r'''
+
+  const languageCopy = {
+    ru: {
+      loading: "ЗАГРУЗКА",
+      live: "ДАННЫЕ АКТУАЛЬНЫ",
+      error: "ОШИБКА ДАННЫХ",
+      noData: "Нет данных",
+      statisticsUnavailable: "Статистика матча недоступна",
+      eventsUnavailable: "События матча недоступны",
+      lineupsUnavailable: "Составы матча недоступны",
+    },
+    en: {
+      loading: "LOADING",
+      live: "DATA LIVE",
+      error: "DATA ERROR",
+      noData: "No data",
+      statisticsUnavailable: "Match statistics unavailable",
+      eventsUnavailable: "Match events unavailable",
+      lineupsUnavailable: "Lineups unavailable",
+    },
+  };
+  let uiLanguage = localStorage.getItem("almazstat.language") === "en" ? "en" : "ru";
+
+  function t(key) {
+    return languageCopy[uiLanguage]?.[key] || languageCopy.ru[key] || key;
+  }
+
+  function applyLanguage() {
+    document.documentElement.lang = uiLanguage;
+    document.querySelectorAll("[data-language]").forEach((button) => {
+      const active = button.dataset.language === uiLanguage;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", active ? "true" : "false");
+    });
+
+    const staticCopy = {
+      ru: {
+        '[data-view="overview"]': "Обзор",
+        '[data-view="statistics"]': "Статистика",
+        '[data-view="events"]': "События",
+        '[data-view="lineups"]': "Составы",
+        '[data-view="form"]': "Форма",
+        '[data-view="h2h"]': "Очные",
+        '[data-view="standings"]': "Таблица",
+        '[data-view="odds"]': "Коэффициенты",
+      },
+      en: {
+        '[data-view="overview"]': "Overview",
+        '[data-view="statistics"]': "Statistics",
+        '[data-view="events"]': "Events",
+        '[data-view="lineups"]': "Lineups",
+        '[data-view="form"]': "Form",
+        '[data-view="h2h"]': "H2H",
+        '[data-view="standings"]': "Standings",
+        '[data-view="odds"]': "Odds",
+      },
+    };
+    for (const [selector, text] of Object.entries(staticCopy[uiLanguage])) {
+      const node = document.querySelector(selector);
+      if (node) node.textContent = text;
+    }
+  }
+
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest?.("[data-language]");
+    if (!button) return;
+    uiLanguage = button.dataset.language === "en" ? "en" : "ru";
+    localStorage.setItem("almazstat.language", uiLanguage);
+    applyLanguage();
+  });
+'''
+          if 'const languageCopy = {' not in js and insert_after in js:
+            js = js.replace(insert_after, insert_after + i18n, 1)
+
+          js = js.replace('      loading: "ЗАГРУЗКА",\n      live: "ДАННЫЕ АКТУАЛЬНЫ",\n      error: "ОШИБКА ДАННЫХ",', '      loading: t("loading"),\n      live: t("live"),\n      error: t("error"),', 1)
+          js = js.replace('`<div class="empty-state">Статистика матча недоступна</div>`', '`<div class="empty-state">${escapeHtml(t("statisticsUnavailable"))}</div>`')
+          js = js.replace('`<div class="empty-state">События матча недоступны</div>`', '`<div class="empty-state">${escapeHtml(t("eventsUnavailable"))}</div>`')
+          js = js.replace('`<div class="empty-state">Составы матча недоступны</div>`', '`<div class="empty-state">${escapeHtml(t("lineupsUnavailable"))}</div>`')
+
+          init_anchor = '  if (telegram) {\n    telegram.ready();\n    telegram.expand();\n  }\n'
+          if 'applyLanguage();' not in js[js.find(init_anchor):js.find(init_anchor)+300] and init_anchor in js:
+            js = js.replace(init_anchor, init_anchor + '\n  queueMicrotask(applyLanguage);\n', 1)
+
+          app.write_text(js)
+          PY
+      - name: Validate
+        run: node --check app.js && node --check server.js && node --check lib/sportmonks-provider.js
+      - name: Commit
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html style.css app.js
+          git commit -m "Phase 3: connect match frontend and add RU EN language switch"
+          git push
