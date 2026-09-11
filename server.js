@@ -2243,40 +2243,50 @@ app.get("/api/match/:fixture/form", async (request, response) => {
 });
 
 app.get("/api/match/:fixture/h2h", async (request, response) => {
-  if (!requireApiKey(response)) return;
   const fixtureId = String(request.params.fixture || "").trim();
-  const counter = { count: 0 };
+
+  if (!sportmonksToken) {
+    return response.status(503).json({
+      error: { code: "SPORTMONKS_NOT_CONFIGURED", message: "Sportmonks не настроен." },
+    });
+  }
 
   try {
-    const fixtureData = await getFixtureDetails(fixtureId, counter);
-    if (!fixtureData) {
-      return response.status(404).json({
-        error: { code: "FIXTURE_NOT_FOUND", message: "Матч не найден." },
-      });
-    }
-
-    const key = `h2h:${fixtureId}`;
+    const key = `sportmonks:h2h:${fixtureId}`;
     let result = cachedValue(key);
+
     if (result === undefined) {
-      const matches = await fetchApiFootball(
-        "/fixtures/headtohead",
-        { h2h: `${fixtureData.home.id}-${fixtureData.away.id}`, last: 5 },
-        counter,
+      const centre = await getSportmonksMatchCentre(fixtureId);
+      if (!centre?.home?.id || !centre?.away?.id) {
+        return response.status(404).json({
+          error: { code: "FIXTURE_NOT_FOUND", message: "Матч не найден." },
+        });
+      }
+
+      const h2hResult = await sportmonksProvider.headToHead(
+        centre.home.id,
+        centre.away.id,
+        { limit: 5 },
       );
-      const h2h = matches.slice(0, 5).map(normalizeH2hMatch);
-      result = { h2h, source: h2h.length > 0 };
+      const h2h = h2hResult?.matches || [];
+      result = {
+        h2h,
+        source: h2h.length > 0,
+        provider: "sportmonks",
+      };
       setCachedValue(key, result, 6 * 60 * 60 * 1000);
     }
 
     return response.json({
       ...result,
-      meta: { apiRequestCount: counter.count },
+      meta: { apiRequestCount: 2 },
     });
   } catch (error) {
-    console.error("API-Football H2H request failed:", error);
+    console.error("Sportmonks H2H request failed:", error?.message || error);
     return response.status(502).json({
       error: { code: "UPSTREAM_UNAVAILABLE", message: "Не удалось загрузить очные встречи." },
-      meta: { apiRequestCount: counter.count },
+      provider: "sportmonks",
+      meta: { apiRequestCount: 0 },
     });
   }
 });
