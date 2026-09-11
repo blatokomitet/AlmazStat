@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - .github/workflows/show-all-live-dashboard.yml
+      - .github/scripts/show-all-live-dashboard.mjs
 permissions:
   contents: write
 jobs:
@@ -14,22 +15,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Show every live fixture first on home
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path('app.js')
-          s=p.read_text()
-          old='''      const block = (items, empty) => items.length ? `<div class="dashboard-fixtures">${items.slice(0, 6).map((item) => dashboardFixtureButton(item)).join("")}</div>` : `<div class="dashboard-empty"><strong>${empty}</strong></div>`;
-      renderDashboardBlock("live", block(live, "Сейчас матчей нет"));'''
-          new='''      const block = (items, empty, limit = 6) => items.length ? `<div class="dashboard-fixtures">${(limit === null ? items : items.slice(0, limit)).map((item) => dashboardFixtureButton(item)).join("")}</div>` : `<div class="dashboard-empty"><strong>${empty}</strong></div>`;
-      renderDashboardBlock("live", block(live, "Сейчас матчей нет", null));'''
-          if old not in s:
-              raise SystemExit('dashboard block marker not found')
-          s=s.replace(old,new,1)
-          p.write_text(s)
-          PY
-          node --check app.js
+      - name: Patch dashboard
+        run: node .github/scripts/show-all-live-dashboard.mjs
+      - name: Validate
+        run: node --check app.js
       - name: Commit
         run: |
           git config user.name "github-actions[bot]"
