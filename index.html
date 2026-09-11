@@ -31,9 +31,15 @@
           </div>
         </a>
 
-        <div class="status" id="data-status" data-state="loading" role="status">
-          <span class="status-dot"></span>
-          <span id="data-status-text">ЗАГРУЗКА</span>
+        <div class="header-actions">
+          <div class="language-switch" role="group" aria-label="Language / Язык">
+            <button type="button" class="language-option active" data-language="ru" aria-pressed="true">РУС</button>
+            <button type="button" class="language-option" data-language="en" aria-pressed="false">ENG</button>
+          </div>
+          <div class="status" id="data-status" data-state="loading" role="status">
+            <span class="status-dot"></span>
+            <span id="data-status-text">ЗАГРУЗКА</span>
+          </div>
         </div>
       </header>
 
@@ -132,7 +138,7 @@
         <section class="section">
           <div class="section-head">
             <div class="section-title">Главный прогноз</div>
-             <div class="section-label">Прогноз API-Football</div>
+             <div class="section-label">Источник данных</div>
           </div>
 
           <div class="prediction">

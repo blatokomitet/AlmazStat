@@ -4,10 +4,38 @@
   const telegram = window.Telegram && window.Telegram.WebApp;
   const params = new URLSearchParams(window.location.search);
 
+
+  const languageCopy = {
+    ru: { loading: "ЗАГРУЗКА", live: "ДАННЫЕ АКТУАЛЬНЫ", error: "ОШИБКА ДАННЫХ", statisticsUnavailable: "Статистика матча недоступна", eventsUnavailable: "События матча недоступны", lineupsUnavailable: "Составы матча недоступны" },
+    en: { loading: "LOADING", live: "DATA LIVE", error: "DATA ERROR", statisticsUnavailable: "Match statistics unavailable", eventsUnavailable: "Match events unavailable", lineupsUnavailable: "Lineups unavailable" },
+  };
+  let uiLanguage = localStorage.getItem("almazstat.language") === "en" ? "en" : "ru";
+  function t(key) { return languageCopy[uiLanguage]?.[key] || languageCopy.ru[key] || key; }
+  function applyLanguage() {
+    document.documentElement.lang = uiLanguage;
+    document.querySelectorAll("[data-language]").forEach((button) => {
+      const active = button.dataset.language === uiLanguage;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", active ? "true" : "false");
+    });
+    const labels = uiLanguage === "en" ? { overview:"Overview", statistics:"Statistics", events:"Events", lineups:"Lineups", form:"Form", h2h:"H2H", standings:"Standings", odds:"Odds" } : { overview:"Обзор", statistics:"Статистика", events:"События", lineups:"Составы", form:"Форма", h2h:"Очные", standings:"Таблица", odds:"Коэффициенты" };
+    Object.entries(labels).forEach(([view, text]) => { const node = document.querySelector(`[data-view="${view}"]`); if (node) node.textContent = text; });
+    if (window.__almazstatRefreshLanguage) window.__almazstatRefreshLanguage();
+  }
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest?.("[data-language]");
+    if (!button) return;
+    uiLanguage = button.dataset.language === "en" ? "en" : "ru";
+    localStorage.setItem("almazstat.language", uiLanguage);
+    applyLanguage();
+  });
+
   if (telegram) {
     telegram.ready();
     telegram.expand();
   }
+
+  queueMicrotask(applyLanguage);
 
   const fixtureFromQuery = (params.get("fixture") || "").trim();
   const fixtureFromTelegram = (
@@ -198,9 +226,9 @@
 
   function setDataStatus(state) {
     const labels = {
-      loading: "ЗАГРУЗКА",
-      live: "ДАННЫЕ АКТУАЛЬНЫ",
-      error: "ОШИБКА ДАННЫХ",
+      loading: t("loading"),
+      live: t("live"),
+      error: t("error"),
     };
     elements.dataStatus.dataset.state = state;
     elements.dataStatusText.textContent = labels[state];
@@ -649,7 +677,7 @@
     const rows = Array.isArray(statistics?.rows) ? statistics.rows : [];
     if (rows.length === 0) {
       elements.statisticsContent.innerHTML =
-        `<div class="empty-state">Статистика матча недоступна</div>`;
+        `<div class="empty-state">${escapeHtml(t("statisticsUnavailable"))}</div>`;
       return;
     }
 

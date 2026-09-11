@@ -3625,3 +3625,10 @@ a.news-card-title:hover { color: #b7bfff; }
   }
   .team-fixture-teams { font-size: 10px; }
 }
+
+/* Phase 3 language switch */
+.header-actions { display:flex; align-items:center; gap:10px; }
+.language-switch { display:flex; padding:3px; border:1px solid rgba(255,255,255,.08); border-radius:10px; background:#101219; }
+.language-option { border:0; background:transparent; color:#858b99; font:inherit; font-size:11px; font-weight:700; letter-spacing:.04em; padding:6px 8px; border-radius:7px; cursor:pointer; }
+.language-option.active { background:#1b1e29; color:#f5f7fb; }
+@media (max-width:520px) { .header-actions { gap:6px; } .language-option { padding:5px 7px; } }
