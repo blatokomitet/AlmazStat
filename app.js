@@ -3123,8 +3123,8 @@
       const recent = sortByCompetitionPriority(matches.filter((item) => finishedStatuses.has(item?.status?.short)));
       const ranked = ordered;
       const leagueNames = [...new Map(ranked.map((item) => [String(item?.league?.id ?? item?.league?.name), item?.league])).values()].filter((league) => league?.id !== null && league?.id !== undefined).slice(0, 6);
-      const block = (items, empty) => items.length ? `<div class="dashboard-fixtures">${items.slice(0, 6).map((item) => dashboardFixtureButton(item)).join("")}</div>` : `<div class="dashboard-empty"><strong>${empty}</strong></div>`;
-      renderDashboardBlock("live", block(live, "Сейчас матчей нет"));
+      const block = (items, empty, limit = 6) => items.length ? `<div class="dashboard-fixtures">${(limit === null ? items : items.slice(0, limit)).map((item) => dashboardFixtureButton(item)).join("")}</div>` : `<div class="dashboard-empty"><strong>${empty}</strong></div>`;
+      renderDashboardBlock("live", block(live, "Сейчас матчей нет", null));
       renderDashboardBlock("main", block(ranked.filter((item) => !liveStatuses.has(item?.status?.short)).slice(0, 6), "Матчей на сегодня нет"));
       renderDashboardBlock("upcoming", block(upcoming, "Предстоящих матчей нет"));
       renderDashboardBlock("recent", block(recent, "Завершённых матчей нет"));
