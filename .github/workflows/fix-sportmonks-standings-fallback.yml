@@ -1,0 +1,33 @@
+name: Fix Sportmonks standings fallback
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/scripts/fix-sportmonks-standings-fallback.mjs
+      - .github/workflows/fix-sportmonks-standings-fallback.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply fix
+        run: node .github/scripts/fix-sportmonks-standings-fallback.mjs
+      - name: Validate
+        run: node --check lib/sportmonks-provider.js
+      - name: Commit
+        run: |
+          if git diff --quiet; then
+            echo "No changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/sportmonks-provider.js
+          git commit -m "fix: make Sportmonks standings resilient"
+          git push
