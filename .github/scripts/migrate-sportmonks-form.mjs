@@ -4,7 +4,7 @@ const providerPath = "lib/sportmonks-provider.js";
 let provider = fs.readFileSync(providerPath, "utf8");
 
 const helperMarker = "export function normalizeSportmonksMatch(fixture) {";
-const helper = String.raw`
+const helper = `
 function participantScore(fixture, participantId) {
   const scores = Array.isArray(fixture?.scores) ? fixture.scores : [];
   const current = scores.find(
@@ -63,7 +63,7 @@ if (!provider.includes("function normalizeRecentFormFixture(")) {
 }
 
 const fixtureAnchor = "  async function fixtureById(fixtureId, { deep = false } = {}) {";
-const teamRecentMethod = String.raw`
+const teamRecentMethod = `
   async function teamRecentForm(teamId, { limit = 5 } = {}) {
     const result = await request(\`/teams/\${encodeURIComponent(teamId)}\`, {
       include: [
@@ -122,7 +122,7 @@ const start = server.indexOf(startMarker);
 const end = server.indexOf(endMarker);
 if (start < 0 || end < 0 || end <= start) throw new Error("Form route anchors not found");
 
-const formRoute = String.raw`app.get("/api/match/:fixture/form", async (request, response) => {
+const formRoute = `app.get("/api/match/:fixture/form", async (request, response) => {
   const fixtureId = String(request.params.fixture || "").trim();
 
   if (!sportmonksToken) {
