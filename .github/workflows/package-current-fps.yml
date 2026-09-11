@@ -1,10 +1,11 @@
-name: Package current FPS
+name: Package current AlmazStat
 
 on:
   push:
     branches: [main]
     paths:
       - .github/workflows/package-current-fps.yml
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -14,23 +15,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Prepare FPS build
+      - name: Validate project
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          p=Path('server.js')
-          s=p.read_text()
-          s=s.replace('const port = Number(process.env.PORT);','const port = Number(process.env.PORT || 11097);',1)
-          p.write_text(s)
-          Path('fps-bootstrap.js').write_text('''import fs from "node:fs";\n\nif (!process.env.PORT) process.env.PORT = "11097";\n\nif (!process.env.SPORTMONKS_API_TOKEN) {\n  const tokenFile = "/home/container/.sportmonks-token";\n  if (fs.existsSync(tokenFile)) {\n    const token = fs.readFileSync(tokenFile, "utf8").trim();\n    if (token) process.env.SPORTMONKS_API_TOKEN = token;\n  }\n}\n\nawait import("./server.js");\n''')
-          PY
           node --check server.js
+          node --check app.js
           node --check lib/sportmonks-provider.js
-          node --check fps-bootstrap.js
-          rm -rf .git .github node_modules
-          zip -r AlmazStat-FPS-Phase2.zip . -x 'AlmazStat-FPS-Phase2.zip'
+      - name: Create snapshot archive
+        run: |
+          rm -rf .git node_modules
+          zip -r AlmazStat-current.zip . -x 'AlmazStat-current.zip'
       - uses: actions/upload-artifact@v4
         with:
-          name: AlmazStat-FPS-Phase2
-          path: AlmazStat-FPS-Phase2.zip
+          name: AlmazStat-current
+          path: AlmazStat-current.zip
           retention-days: 7
