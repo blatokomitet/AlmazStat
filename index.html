@@ -9,13 +9,13 @@
     <meta name="theme-color" content="#08090d" />
     <meta
       name="description"
-      content="AlmazStat — Football Intelligence в Telegram"
+      content="AlmazStat — матчи, турниры и контекст футбола"
     />
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23101219'/%3E%3Cpath d='M32 11 51 32 32 53 13 32Z' fill='none' stroke='%238b72ff' stroke-width='5'/%3E%3C/svg%3E"
     />
-    <title>AlmazStat — Football Intelligence</title>
+    <title>AlmazStat — футбол без лишнего</title>
     <link rel="stylesheet" href="/style.css" />
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="/app.js" defer></script>
@@ -23,26 +23,27 @@
   <body>
     <main class="app">
       <header class="header">
-        <div class="brand">
+        <a class="brand" data-route="/" href="/">
           <div class="logo" aria-hidden="true"></div>
           <div>
             <div class="brand-name">AlmazStat</div>
-            <div class="brand-sub">Football Intelligence</div>
+            <div class="brand-sub">Футбол · данные · контекст</div>
           </div>
-        </div>
+        </a>
 
         <div class="status" id="data-status" data-state="loading" role="status">
           <span class="status-dot"></span>
-          <span id="data-status-text">LOADING</span>
+          <span id="data-status-text">ЗАГРУЗКА</span>
         </div>
       </header>
 
       <section class="matches-screen" id="matches-screen" hidden>
         <div class="matches-heading">
           <div>
-            <div class="screen-kicker">Match Center</div>
+            <div class="screen-kicker">Матч-центр</div>
             <div class="screen-title" id="matches-heading">Сегодня</div>
             <div class="screen-date" id="matches-date">—</div>
+            <div class="matches-meta" id="matches-meta">Матчи загружаются</div>
           </div>
         </div>
 
@@ -77,35 +78,37 @@
         <div class="league-groups" id="matches-list"></div>
       </section>
 
+      <section class="dashboard-screen" id="dashboard-screen" hidden aria-live="polite"></section>
+
       <section class="analysis-screen" id="analysis-screen" hidden>
-        <a class="back-link" href="/">← Все матчи</a>
+        <a class="back-link" data-route="/matches" href="/matches">← Все матчи</a>
         <div class="analysis-state" id="analysis-state">Загрузка аналитики</div>
         <div id="analysis-content" hidden>
 
       <section class="match-card">
-        <div class="league" id="league-name">Нет данных</div>
+        <a class="league match-entity-link" id="league-link"><span id="league-name">Нет данных</span></a>
 
         <div class="teams">
-          <div class="team">
+          <a class="team match-entity-link" id="home-team-link">
             <div class="crest" id="home-crest">
               <span class="crest-placeholder" aria-hidden="true">◇</span>
               <img id="home-logo" alt="" hidden />
             </div>
             <div class="team-name" id="home-name">Нет данных</div>
-          </div>
+          </a>
 
           <div class="match-center">
             <div class="score" id="match-score">— : —</div>
             <div class="fixture-status" id="fixture-status">Нет данных</div>
           </div>
 
-          <div class="team">
+          <a class="team match-entity-link" id="away-team-link">
             <div class="crest" id="away-crest">
               <span class="crest-placeholder" aria-hidden="true">◇</span>
               <img id="away-logo" alt="" hidden />
             </div>
             <div class="team-name" id="away-name">Нет данных</div>
-          </div>
+          </a>
         </div>
 
         <div class="match-time">
@@ -116,18 +119,20 @@
 
       <nav class="tabs" role="tablist" aria-label="Разделы матча">
         <button class="tab active" type="button" role="tab" aria-selected="true" aria-controls="view-overview" data-view="overview">Обзор</button>
+        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="view-statistics" data-view="statistics">Статистика</button>
+        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="view-events" data-view="events">События</button>
+        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="view-lineups" data-view="lineups">Составы</button>
         <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="view-form" data-view="form">Форма</button>
         <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="view-h2h" data-view="h2h">Очные</button>
         <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="view-standings" data-view="standings">Таблица</button>
         <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="view-odds" data-view="odds">Коэффициенты</button>
-        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="view-risk" data-view="risk">Риск</button>
       </nav>
 
       <div id="view-overview" class="content-view active" role="tabpanel">
         <section class="section">
           <div class="section-head">
             <div class="section-title">Главный прогноз</div>
-            <div class="section-label">API-Football</div>
+             <div class="section-label">Прогноз API-Football</div>
           </div>
 
           <div class="prediction">
@@ -162,12 +167,50 @@
           </div>
         </section>
 
+        <section class="section overview-signal-section">
+          <div class="section-head">
+            <div class="section-title">Срез матча</div>
+            <div class="section-label">Только доступные данные</div>
+          </div>
+          <div class="overview-signal" id="overview-signal"></div>
+        </section>
+
         <section class="section" id="metrics-section" hidden>
           <div class="section-head">
             <div class="section-title">Ключевые показатели</div>
             <div class="section-label">Матч</div>
           </div>
           <div class="stats" id="metrics-list"></div>
+        </section>
+      </div>
+
+      <div id="view-statistics" class="content-view" role="tabpanel">
+        <section class="section">
+          <div class="section-head">
+            <div class="section-title">Статистика матча</div>
+             <div class="section-label">Доступные данные</div>
+          </div>
+          <div class="fixture-statistics" id="statistics-content"></div>
+        </section>
+      </div>
+
+      <div id="view-events" class="content-view" role="tabpanel">
+        <section class="section">
+          <div class="section-head">
+            <div class="section-title">События матча</div>
+            <div class="section-label">Хронология</div>
+          </div>
+          <div class="fixture-events" id="events-content"></div>
+        </section>
+      </div>
+
+      <div id="view-lineups" class="content-view" role="tabpanel">
+        <section class="section">
+          <div class="section-head">
+            <div class="section-title">Составы команд</div>
+            <div class="section-label">Матч</div>
+          </div>
+          <div class="fixture-lineups" id="lineups-content"></div>
         </section>
       </div>
 
@@ -205,59 +248,57 @@
         <section class="section">
           <div class="section-head">
             <div class="section-title">Коэффициенты</div>
-            <div class="section-label">API-Football</div>
+             <div class="section-label">Доступные данные</div>
           </div>
           <div class="list-card" id="odds-content"></div>
         </section>
       </div>
 
-      <div id="view-risk" class="content-view" role="tabpanel">
-        <section class="section">
-          <div class="section-head">
-            <div class="section-title">Data Quality Risk</div>
-            <div class="section-label">Источники</div>
-          </div>
-          <div class="risk">
-            <div class="risk-top">
-              <div class="risk-level">
-                <div class="risk-icon" aria-hidden="true">◈</div>
-                <div class="risk-text">
-                  <strong id="risk-level">Нет данных</strong>
-                  <span id="risk-description">Данные ещё не загружены</span>
-                </div>
-              </div>
-              <div class="risk-score" id="risk-score">—</div>
-            </div>
-            <div class="risk-bar">
-              <div class="risk-fill" id="risk-fill"></div>
-            </div>
-            <div class="source-grid" id="risk-sources"></div>
-            <p class="risk-note">
-              Индекс показывает полноту аналитических данных, а не вероятность исхода матча.
-              Полнота данных уточняется по мере загрузки разделов.
-            </p>
-          </div>
-        </section>
-      </div>
-
         </div>
       </section>
+
+      <section class="data-screen" id="data-screen" hidden>
+        <div class="screen-kicker" id="data-kicker">Футбольные данные</div>
+        <h1 class="placeholder-title" id="data-title">Раздел</h1>
+        <p class="placeholder-copy" id="data-description"></p>
+        <div id="data-content" aria-live="polite"></div>
+      </section>
+
+      <footer class="site-footer">
+        <div class="footer-brand">
+          <span class="footer-mark" aria-hidden="true">◇</span>
+          <span>AlmazStat</span>
+        </div>
+        <nav class="footer-links" aria-label="Разделы AlmazStat">
+          <a data-route="/" href="/">Главная</a>
+          <a data-route="/matches" href="/matches">Матчи</a>
+          <a data-route="/leagues" href="/leagues">Лиги</a>
+          <a data-route="/teams" href="/teams">Команды</a>
+          <a data-route="/players" href="/players">Игроки</a>
+          <a data-route="/statistics" href="/statistics">Статистика</a>
+        </nav>
+         <div class="footer-note">Данные матчей и турниров · AlmazStat © 2026</div>
+      </footer>
     </main>
 
     <footer class="bottom">
       <div class="bottom-inner">
-        <a class="bottom-item" id="matches-nav" href="/">
+        <a class="bottom-item" data-shell-nav="/" data-route="/" href="/">
           <div class="bottom-icon" aria-hidden="true">⌂</div>
+          Главная
+        </a>
+        <a class="bottom-item" data-shell-nav="/matches" data-route="/matches" href="/matches">
+          <div class="bottom-icon" aria-hidden="true">◈</div>
           Матчи
         </a>
-        <button class="bottom-item" id="analytics-nav" type="button" aria-disabled="true" disabled>
-          <div class="bottom-icon" aria-hidden="true">◈</div>
-          Аналитика
-        </button>
-        <button class="bottom-item" type="button" aria-disabled="true" disabled>
-          <div class="bottom-icon" aria-hidden="true">⚙</div>
-          Настройки
-        </button>
+        <a class="bottom-item" data-shell-nav="/leagues" data-route="/leagues" href="/leagues">
+          <div class="bottom-icon" aria-hidden="true">▦</div>
+          Лиги
+        </a>
+        <a class="bottom-item" data-shell-nav="/teams" data-route="/teams" href="/teams">
+          <div class="bottom-icon" aria-hidden="true">♢</div>
+          Команды
+        </a>
       </div>
     </footer>
   </body>

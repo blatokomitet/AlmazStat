@@ -22,10 +22,16 @@ Minimal Telegram Mini App foundation for football match analytics.
 
 - API-Football credentials are read only on the server from `API_FOOTBALL_KEY`.
 - The frontend accepts a fixture ID from `?fixture=` first, then Telegram `start_param`.
+- Leagues, teams, players, and top-scorer statistics use normalized API-Football
+  proxy routes. News uses the public BBC Sport football RSS feed and is labeled
+  separately in the response.
+- Analytics routes pass upstream failures and empty responses to the UI as
+  explicit states; they never substitute demo records.
 
 ## Product
 
-The first step only provides a stable match shell and placeholders for future analytics sections.
+The app provides a stable match shell plus live-data analytics sections. Match
+Center and Match Details keep their existing API contracts.
 
 ## User preferences
 
