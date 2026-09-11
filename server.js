@@ -2195,57 +2195,49 @@ function sportmonksLineupsForUi(centre) {
 }
 
 app.get("/api/match/:fixture/form", async (request, response) => {
-  if (!requireApiKey(response)) return;
   const fixtureId = String(request.params.fixture || "").trim();
-  const counter = { count: 0 };
+
+  if (!sportmonksToken) {
+    return response.status(503).json({
+      error: { code: "SPORTMONKS_NOT_CONFIGURED", message: "Sportmonks не настроен." },
+    });
+  }
 
   try {
-    const fixtureData = await getFixtureDetails(fixtureId, counter);
-    if (!fixtureData) {
-      return response.status(404).json({
-        error: { code: "FIXTURE_NOT_FOUND", message: "Матч не найден." },
-      });
-    }
-
-    const key = `form:${fixtureId}`;
+    const key = `sportmonks:form:${fixtureId}`;
     let result = cachedValue(key);
+
     if (result === undefined) {
-      const [homeMatches, awayMatches] = await Promise.all([
-        fetchApiFootball(
-          "/fixtures",
-          { team: fixtureData.home.id, last: 5 },
-          counter,
-        ),
-        fetchApiFootball(
-          "/fixtures",
-          { team: fixtureData.away.id, last: 5 },
-          counter,
-        ),
+      const centre = await getSportmonksMatchCentre(fixtureId);
+      if (!centre?.home?.id || !centre?.away?.id) {
+        return response.status(404).json({
+          error: { code: "FIXTURE_NOT_FOUND", message: "Матч не найден." },
+        });
+      }
+
+      const [homeRecent, awayRecent] = await Promise.all([
+        sportmonksProvider.teamRecentForm(centre.home.id, { limit: 5 }),
+        sportmonksProvider.teamRecentForm(centre.away.id, { limit: 5 }),
       ]);
+
       const form = {
-        home: homeMatches
-          .slice(0, 5)
-          .map((match) => normalizeFormMatch(match, fixtureData.home.id)),
-        away: awayMatches
-          .slice(0, 5)
-          .map((match) => normalizeFormMatch(match, fixtureData.away.id)),
+        home: homeRecent?.matches || [],
+        away: awayRecent?.matches || [],
       };
       result = {
         form,
         source: form.home.length > 0 && form.away.length > 0,
+        provider: "sportmonks",
       };
       setCachedValue(key, result, 30 * 60 * 1000);
     }
 
-    return response.json({
-      ...result,
-      meta: { apiRequestCount: counter.count },
-    });
+    return response.json({ ...result, meta: { apiRequestCount: 3 } });
   } catch (error) {
-    console.error("API-Football form request failed:", error);
+    console.error("Sportmonks form request failed:", error?.message || error);
     return response.status(502).json({
       error: { code: "UPSTREAM_UNAVAILABLE", message: "Не удалось загрузить форму." },
-      meta: { apiRequestCount: counter.count },
+      meta: { apiRequestCount: 0 },
     });
   }
 });
