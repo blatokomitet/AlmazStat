@@ -1,0 +1,40 @@
+name: Sportmonks Standings migration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/scripts/migrate-sportmonks-standings.mjs
+      - .github/workflows/migrate-sportmonks-standings.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Migrate standings route and provider
+        run: node .github/scripts/migrate-sportmonks-standings.mjs
+
+      - name: Validate JavaScript
+        run: |
+          node --check server.js
+          node --check lib/sportmonks-provider.js
+
+      - name: Commit migration
+        run: |
+          if git diff --quiet -- server.js lib/sportmonks-provider.js; then
+            echo "No standings migration changes needed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add server.js lib/sportmonks-provider.js
+          git commit -m "feat: migrate standings to Sportmonks"
+          git push
