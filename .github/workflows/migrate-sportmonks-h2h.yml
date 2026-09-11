@@ -1,0 +1,37 @@
+name: Sportmonks H2H migration
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/migrate-sportmonks-h2h.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply H2H migration
+        run: node .github/scripts/migrate-sportmonks-h2h.mjs
+      - name: Validate syntax
+        run: |
+          node --check lib/sportmonks-provider.js
+          node --check server.js
+      - name: Verify migration markers
+        run: |
+          grep -q 'async function headToHead' lib/sportmonks-provider.js
+          grep -q 'sportmonks:h2h:' server.js
+          ! grep -A 8 'app.get("/api/match/:fixture/h2h"' server.js | grep -q 'requireApiKey'
+      - name: Commit migration
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/sportmonks-provider.js server.js
+          git commit -m "feat: migrate H2H to Sportmonks"
+          git push
