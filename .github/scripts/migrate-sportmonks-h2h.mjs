@@ -34,6 +34,16 @@ const h2hNormalizer = `function normalizeHeadToHeadFixture(fixture) {
   };
 }
 
+function isUsableHeadToHeadFixture(fixture) {
+  return (
+    fixture.fixtureId !== null &&
+    fixture.home.id !== null &&
+    fixture.away.id !== null &&
+    fixture.score.home !== null &&
+    fixture.score.away !== null
+  );
+}
+
 `;
 
 if (!provider.includes("function normalizeHeadToHeadFixture")) {
@@ -53,7 +63,7 @@ const h2hMethod = `  async function headToHead(firstTeamId, secondTeamId, { limi
     const rows = Array.isArray(result.data) ? result.data : [];
     const matches = rows
       .map(normalizeHeadToHeadFixture)
-      .filter((fixture) => fixture.fixtureId !== null)
+      .filter(isUsableHeadToHeadFixture)
       .sort(
         (a, b) =>
           Number(b.date ? Date.parse(b.date) : 0) -

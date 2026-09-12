@@ -9,13 +9,8 @@ let server = fs.readFileSync(serverPath, "utf8");
 if (!provider.includes("function normalizeSportmonksStanding(row)")) {
   const anchor = "export function normalizeSportmonksMatch(fixture) {";
   const helper = String.raw`
-function standingDetailKey(detail) {
-  return String(
-    detail?.type?.developer_name ||
-      detail?.type?.code ||
-      detail?.type?.name ||
-      "",
-  )
+function normalizeStandingDetailKey(value) {
+  return String(value || "")
     .trim()
     .toUpperCase()
     .replace(/[^A-Z0-9]+/g, "_")
@@ -23,9 +18,13 @@ function standingDetailKey(detail) {
 }
 
 function standingDetailValue(row, aliases) {
-  const wanted = new Set(aliases.map((alias) => String(alias).toUpperCase()));
+  const wanted = new Set(aliases.map(normalizeStandingDetailKey));
   const details = Array.isArray(row?.details) ? row.details : [];
-  const detail = details.find((item) => wanted.has(standingDetailKey(item)));
+  const detail = details.find((item) =>
+    [item?.type?.developer_name, item?.type?.code, item?.type?.name]
+      .map(normalizeStandingDetailKey)
+      .some((key) => wanted.has(key)),
+  );
   if (!detail) return null;
   return detail?.value ?? detail?.data?.value ?? null;
 }
@@ -41,6 +40,7 @@ function normalizeSportmonksStanding(row) {
       logo: participant?.image_path ?? null,
     },
     played: standingDetailValue(row, [
+      "OVERALL_MATCHES",
       "OVERALL_MATCHES_PLAYED",
       "MATCHES_PLAYED",
       "PLAYED",
@@ -65,9 +65,11 @@ function normalizeSportmonksStanding(row) {
     ]),
     goalsFor: standingDetailValue(row, [
       "OVERALL_GOALS_FOR",
+      "OVERALL_SCORED",
       "GOALS_FOR",
     ]),
     goalsAgainst: standingDetailValue(row, [
+      "OVERALL_CONCEDED",
       "OVERALL_GOALS_AGAINST",
       "GOALS_AGAINST",
     ]),
