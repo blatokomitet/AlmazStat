@@ -1,15 +1,29 @@
 import express from "express";
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createSportmonksProvider } from "./lib/sportmonks-provider.js";
 import { loadMatchRecentForm } from "./lib/recent-form-service.js";
+import { createGeminiAnalysisProvider } from "./lib/gemini-analysis-provider.js";
 
 const app = express();
 const port = Number(process.env.PORT);
 const apiFootballKey = process.env.API_FOOTBALL_KEY;
 const sportmonksToken = process.env.SPORTMONKS_API_TOKEN;
+function readOptionalSecretFile(fileName) {
+  try {
+    return fs.readFileSync(path.join(process.cwd(), fileName), "utf8").trim();
+  } catch {
+    return "";
+  }
+}
+
+const geminiApiKey = process.env.GEMINI_API_KEY
+  || process.env.GOOGLE_API_KEY
+  || readOptionalSecretFile("gemini-key.txt");
 const apiFootballBaseUrl = "https://v3.football.api-sports.io";
 const sportmonksProvider = createSportmonksProvider({ token: sportmonksToken });
+const geminiAnalysisProvider = createGeminiAnalysisProvider({ apiKey: geminiApiKey });
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 const dataCache = new Map();
 const apiFootballInflight = new Map();
@@ -17,6 +31,8 @@ const mediaCache = new Map();
 const mediaInflight = new Map();
 const mediaCacheTtlMs = 24 * 60 * 60 * 1000;
 const mediaCacheMaxEntries = 500;
+const aiRequestWindows = new Map();
+const aiRequestsPerHour = 12;
 
 if (!Number.isInteger(port) || port <= 0) {
   throw new Error("PORT environment variable must contain a valid port number.");
@@ -1965,6 +1981,106 @@ function sportmonksLineupsForUi(centre) {
 
   return { home: mapTeam("home"), away: mapTeam("away") };
 }
+
+function aiRateLimitAllows(key) {
+  const now = Date.now();
+  const windowMs = 60 * 60 * 1000;
+  const current = aiRequestWindows.get(key);
+  if (!current || current.startedAt + windowMs <= now) {
+    aiRequestWindows.set(key, { startedAt: now, count: 1 });
+    return true;
+  }
+  if (current.count >= aiRequestsPerHour) return false;
+  current.count += 1;
+  return true;
+}
+
+async function collectAiMatchFacts(fixtureId) {
+  const centre = await getSportmonksMatchCentre(fixtureId);
+  if (!centre?.home?.id || !centre?.away?.id) return null;
+
+  const [formResult, h2hResult, standingsResult, oddsResult] = await Promise.allSettled([
+    loadMatchRecentForm({ fixtureId, getMatchCentre: getSportmonksMatchCentre, teamRecentForm: sportmonksProvider.teamRecentForm, limit: 5 }),
+    sportmonksProvider.headToHead(centre.home.id, centre.away.id, { limit: 5 }),
+    centre?.league?.season ? sportmonksProvider.standingsBySeason(centre.league.season) : Promise.resolve({ standings: [] }),
+    sportmonksProvider.oddsByFixture(fixtureId),
+  ]);
+
+  const form = formResult.status === "fulfilled" ? formResult.value?.form : null;
+  const h2h = h2hResult.status === "fulfilled" ? h2hResult.value?.matches || [] : [];
+  const table = standingsResult.status === "fulfilled" ? standingsResult.value?.standings || [] : [];
+  const odds = oddsResult.status === "fulfilled" ? oddsResult.value?.odds || [] : [];
+  const statistics = sportmonksStatisticsForUi(centre);
+  const standing = (teamId) => table.find((row) => Number(row?.team?.id) === Number(teamId)) || null;
+  const compactMatches = (rows) => (rows || []).slice(0, 5).map((row) => ({
+    date: row?.date ?? null,
+    home: row?.home?.name ?? null,
+    away: row?.away?.name ?? null,
+    score: row?.score ?? null,
+    result: row?.result ?? null,
+  }));
+
+  return {
+    fixture: {
+      id: centre.fixture?.id ?? fixtureId,
+      date: centre.fixture?.date ?? null,
+      status: centre.fixture?.status ?? null,
+      score: centre.score ?? null,
+      league: { name: centre.league?.name ?? null, season: centre.league?.season ?? null, round: centre.league?.round ?? null },
+      home: { id: centre.home.id, name: centre.home.name },
+      away: { id: centre.away.id, name: centre.away.name },
+    },
+    recentForm: { home: compactMatches(form?.home), away: compactMatches(form?.away) },
+    headToHead: compactMatches(h2h),
+    standings: { home: standing(centre.home.id), away: standing(centre.away.id) },
+    statistics: (statistics.rows || []).slice(0, 30).map((row) => ({ type: row.type, home: row.home, away: row.away })),
+    lineups: { homeStarters: centre.lineups?.home?.starters?.length || 0, awayStarters: centre.lineups?.away?.starters?.length || 0 },
+    odds: odds.slice(0, 24).map((row) => ({ bookmaker: row.bookmaker, market: row.market, option: row.option, odd: row.odd })),
+    availability: {
+      form: Boolean(form?.home?.length || form?.away?.length),
+      headToHead: h2h.length > 0,
+      standings: table.length > 0,
+      statistics: statistics.rows.length > 0,
+      odds: odds.length > 0,
+    },
+  };
+}
+
+app.get("/api/match/:fixture/ai-analysis", async (request, response) => {
+  if (!geminiApiKey) {
+    return response.status(503).json({ error: { code: "GEMINI_NOT_CONFIGURED", message: "ИИ ещё не настроен: добавьте GEMINI_API_KEY." } });
+  }
+  if (!sportmonksToken) {
+    return response.status(503).json({ error: { code: "SPORTMONKS_NOT_CONFIGURED", message: "Sportmonks не настроен." } });
+  }
+  const fixtureId = String(request.params.fixture || "").trim();
+  if (!/^\d+$/.test(fixtureId)) {
+    return response.status(400).json({ error: { code: "INVALID_FIXTURE", message: "Некорректный ID матча." } });
+  }
+  const language = request.query.lang === "en" ? "en" : "ru";
+  const cacheKey = `gemini:analysis:${fixtureId}:${language}`;
+
+  try {
+    let result = cachedValue(cacheKey);
+    if (result === undefined) {
+      const rateKey = String(request.ip || request.socket?.remoteAddress || "unknown");
+      if (!aiRateLimitAllows(rateKey)) {
+        return response.status(429).json({ error: { code: "AI_RATE_LIMIT", message: "Лимит ИИ-запросов исчерпан. Попробуйте позже." } });
+      }
+      const facts = await collectAiMatchFacts(fixtureId);
+      if (!facts) return response.status(404).json({ error: { code: "FIXTURE_NOT_FOUND", message: "Матч не найден." } });
+      result = await geminiAnalysisProvider.analyze(facts, { language });
+      result = { ...result, source: true, generatedAt: new Date().toISOString() };
+      setCachedValue(cacheKey, result, 30 * 60 * 1000);
+    }
+    return response.json(result);
+  } catch (error) {
+    console.error("Gemini match analysis failed:", error?.message || error);
+    return response.status(error?.status === 429 ? 429 : 502).json({
+      error: { code: "AI_UNAVAILABLE", message: "Не удалось подготовить ИИ-разбор матча." },
+    });
+  }
+});
 
 app.get("/api/match/:fixture/form", async (request, response) => {
   const fixtureId = String(request.params.fixture || "").trim();

@@ -45,10 +45,14 @@ nano .env
 
 ```dotenv
 API_FOOTBALL_KEY=YOUR_REAL_API_FOOTBALL_KEY
+SPORTMONKS_API_TOKEN=YOUR_REAL_SPORTMONKS_TOKEN
+GEMINI_API_KEY=YOUR_REAL_GEMINI_KEY
 PORT=5000
 ```
 
 Файл `.env` исключён из Git. Не добавляйте его в репозиторий.
+
+Для FPS.ms предпочтительно добавить `GEMINI_API_KEY` как переменную Startup. Если панель не разрешает создавать произвольные переменные, создайте через File Manager файл `gemini-key.txt` в `/home/container` и поместите в него только ключ Gemini. Файл исключён из Git.
 
 ## 5. Запуск через PM2
 

@@ -2295,6 +2295,88 @@ a {
   width: max-content;
 }
 
+.ai-tab {
+  border-color: rgba(34, 201, 120, .3);
+  color: #91f0bd;
+}
+
+.ai-analysis-loading {
+  display: grid;
+  min-height: 220px;
+  place-content: center;
+  justify-items: center;
+  gap: 16px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.ai-analysis-loading span {
+  width: 42px;
+  height: 42px;
+  border: 3px solid rgba(34, 201, 120, .15);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: ai-spin .8s linear infinite;
+}
+
+@keyframes ai-spin { to { transform: rotate(360deg); } }
+
+.ai-analysis-card {
+  padding: 20px;
+  border: 1px solid rgba(34, 201, 120, .24);
+  border-radius: 22px;
+  background: linear-gradient(145deg, rgba(34, 201, 120, .09), rgba(21, 25, 32, .98) 42%);
+}
+
+.ai-analysis-badge {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 15px;
+}
+
+.ai-analysis-badge span {
+  padding: 5px 8px;
+  border-radius: 7px;
+  background: var(--green);
+  color: #07120d;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.ai-analysis-badge small { color: var(--muted); font-size: 9px; }
+.ai-analysis-card h2 { margin: 0; font-size: 22px; line-height: 1.15; }
+.ai-analysis-card > p { margin: 12px 0 18px; color: #aeb7c3; font-size: 13px; line-height: 1.65; }
+
+.ai-analysis-score {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.ai-analysis-score > div {
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  min-height: 70px;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, .16);
+}
+
+.ai-analysis-score span { color: var(--muted); font-size: 8px; text-transform: uppercase; }
+.ai-analysis-score strong { overflow-wrap: anywhere; font-size: 11px; }
+.ai-analysis-group { margin-top: 20px; }
+.ai-analysis-group h3 { margin: 0 0 10px; font-size: 12px; }
+.ai-analysis-group ul { display: grid; gap: 8px; margin: 0; padding-left: 18px; color: #b8c1cc; font-size: 12px; line-height: 1.5; }
+.ai-analysis-group.risk h3 { color: #f5bd67; }
+.ai-market-signals { display: grid; gap: 7px; }
+.ai-market-signals > div { display: grid; gap: 4px; padding: 10px; border-radius: 10px; background: rgba(255,255,255,.025); }
+.ai-market-signals strong { color: #8ceab7; font-size: 10px; }
+.ai-market-signals span { color: #aeb7c3; font-size: 11px; line-height: 1.45; }
+.ai-analysis-card footer { margin-top: 20px; padding-top: 13px; border-top: 1px solid var(--line); color: #737d8b; font-size: 9px; line-height: 1.5; }
+
 .standings-list {
   display: grid;
   gap: 10px;

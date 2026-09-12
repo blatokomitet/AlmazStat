@@ -31,6 +31,7 @@ node_modules/
 .env
 .env.*
 !.env.example
+gemini-key.txt
 /.sass-cache
 /connect.lock
 /coverage

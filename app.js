@@ -34,7 +34,8 @@
     ["Все матчи", "All matches"], ["Нет данных", "No data"], ["Ошибка данных", "Data error"],
     ["Источник данных недоступен.", "Data source unavailable."], ["Проверьте соединение.", "Check your connection."],
     ["Матчи недоступны", "Matches unavailable"], ["Матчи недоступны · проверьте соединение", "Matches unavailable · check your connection"],
-    ["Обзор", "Overview"], ["События", "Events"], ["Составы", "Lineups"], ["Форма", "Form"],
+    ["Обзор", "Overview"], ["ИИ-разбор", "AI analysis"], ["ИИ-разбор матча", "AI match analysis"],
+    ["События", "Events"], ["Составы", "Lineups"], ["Форма", "Form"],
     ["Очные", "H2H"], ["Таблица", "Standings"], ["Коэффициенты", "Odds"],
     ["Главный прогноз", "Main prediction"], ["Источник данных", "Data source"], ["Прогноз матча", "Match prediction"],
     ["Прогноз недоступен", "Prediction unavailable"], ["Победа 1", "Home win"], ["Ничья", "Draw"], ["Победа 2", "Away win"],
@@ -109,7 +110,7 @@
       button.classList.toggle("active", active);
       button.setAttribute("aria-pressed", active ? "true" : "false");
     });
-    const labels = uiLanguage === "en" ? { overview:"Overview", statistics:"Statistics", events:"Events", lineups:"Lineups", form:"Form", h2h:"H2H", standings:"Standings", odds:"Odds" } : { overview:"Обзор", statistics:"Статистика", events:"События", lineups:"Составы", form:"Форма", h2h:"Очные", standings:"Таблица", odds:"Коэффициенты" };
+    const labels = uiLanguage === "en" ? { overview:"Overview", ai:"AI analysis", statistics:"Statistics", events:"Events", lineups:"Lineups", form:"Form", h2h:"H2H", standings:"Standings", odds:"Odds" } : { overview:"Обзор", ai:"ИИ-разбор", statistics:"Статистика", events:"События", lineups:"Составы", form:"Форма", h2h:"Очные", standings:"Таблица", odds:"Коэффициенты" };
     Object.entries(labels).forEach(([view, text]) => { const node = document.querySelector(`[data-view="${view}"]`); if (node) node.textContent = text; });
     translateTree(document.body);
     if (window.__almazstatRefreshLanguage) window.__almazstatRefreshLanguage();
@@ -227,6 +228,7 @@
     h2h: "unknown",
     standings: "unknown",
     odds: "unknown",
+    ai: "unknown",
   };
   const matchCenterStateKey = "almazstat.matchCenter";
   const liveStatuses = new Set([
@@ -306,6 +308,7 @@
     standingsContent: document.getElementById("standings-content"),
     standingsLabel: document.getElementById("standings-label"),
     oddsContent: document.getElementById("odds-content"),
+    aiContent: document.getElementById("ai-content"),
     riskLevel: document.getElementById("risk-level"),
     riskDescription: document.getElementById("risk-description"),
     riskScore: document.getElementById("risk-score"),
@@ -833,6 +836,39 @@
     }).join("");
   }
 
+  function renderAiAnalysis(analysis, meta) {
+    if (!analysis) {
+      elements.aiContent.innerHTML = `<div class="empty-state">${uiLanguage === "en" ? "AI analysis is unavailable" : "ИИ-разбор недоступен"}</div>`;
+      return;
+    }
+    const leanLabels = {
+      HOME: currentMatch?.home?.name || (uiLanguage === "en" ? "Home" : "Хозяева"),
+      DRAW: uiLanguage === "en" ? "Draw" : "Ничья",
+      AWAY: currentMatch?.away?.name || (uiLanguage === "en" ? "Away" : "Гости"),
+      NO_EDGE: uiLanguage === "en" ? "No clear edge" : "Нет явного преимущества",
+    };
+    const qualityLabels = uiLanguage === "en"
+      ? { LOW: "Low data", MEDIUM: "Medium data", HIGH: "High data" }
+      : { LOW: "Мало данных", MEDIUM: "Средне данных", HIGH: "Много данных" };
+    const list = (title, rows, tone = "") => !rows?.length ? "" : `
+      <section class="ai-analysis-group ${tone}"><h3>${escapeHtml(title)}</h3><ul>${rows.map((row) => `<li>${escapeHtml(row)}</li>`).join("")}</ul></section>`;
+    elements.aiContent.innerHTML = `
+      <article class="ai-analysis-card">
+        <div class="ai-analysis-badge"><span>AI</span><small>${escapeHtml(meta?.model || "Gemini")}</small></div>
+        <h2>${escapeHtml(analysis.headline)}</h2>
+        <p>${escapeHtml(analysis.summary)}</p>
+        <div class="ai-analysis-score">
+          <div><span>${uiLanguage === "en" ? "Lean" : "Перевес"}</span><strong>${escapeHtml(leanLabels[analysis.lean] || leanLabels.NO_EDGE)}</strong></div>
+          <div><span>${uiLanguage === "en" ? "Confidence" : "Уверенность"}</span><strong>${escapeHtml(analysis.confidence)}%</strong></div>
+          <div><span>${uiLanguage === "en" ? "Evidence" : "Данные"}</span><strong>${escapeHtml(qualityLabels[analysis.dataQuality] || qualityLabels.LOW)}</strong></div>
+        </div>
+        ${list(uiLanguage === "en" ? "Key factors" : "Ключевые факторы", analysis.keyFactors)}
+        ${list(uiLanguage === "en" ? "Risks and missing data" : "Риски и нехватка данных", analysis.risks, "risk")}
+        ${analysis.marketSignals?.length ? `<section class="ai-analysis-group"><h3>${uiLanguage === "en" ? "Market signals" : "Сигналы рынков"}</h3><div class="ai-market-signals">${analysis.marketSignals.map((item) => `<div><strong>${escapeHtml(item.market)}</strong><span>${escapeHtml(item.observation)}</span></div>`).join("")}</div></section>` : ""}
+        <footer>${uiLanguage === "en" ? "AI interpretation of available data, not a guaranteed forecast." : "Интерпретация доступных данных ИИ, а не гарантированный прогноз."}</footer>
+      </article>`;
+  }
+
   function renderStatisticTeam(team) {
     const logo = team?.logo
       ? `<img src="${escapeHtml(assetUrl(team.logo))}" alt="" loading="lazy" />`
@@ -1209,6 +1245,7 @@
     if (view === "h2h") elements.h2hContent.innerHTML = loading;
     if (view === "standings") elements.standingsContent.innerHTML = loading;
     if (view === "odds") elements.oddsContent.innerHTML = loading;
+    if (view === "ai") elements.aiContent.innerHTML = `<div class="ai-analysis-loading"><span></span><strong>${uiLanguage === "en" ? "Gemini is analyzing the match…" : "Gemini анализирует матч…"}</strong></div>`;
   }
 
   function renderSectionUnavailable(view) {
@@ -1221,6 +1258,7 @@
       renderStandings({ home: null, away: null }, currentMatch?.league?.season);
     }
     if (view === "odds") renderOdds([]);
+    if (view === "ai") renderAiAnalysis(null);
   }
 
   function renderRetry(container, message, retry) {
@@ -1244,6 +1282,7 @@
       h2h: elements.h2hContent,
       standings: elements.standingsContent,
       odds: elements.oddsContent,
+      ai: elements.aiContent,
     };
     const messages = {
       statistics: "Не удалось получить статистику",
@@ -1253,6 +1292,7 @@
       h2h: "Не удалось загрузить очные встречи",
       standings: "Не удалось загрузить турнирную таблицу",
       odds: "Не удалось загрузить коэффициенты",
+      ai: uiLanguage === "en" ? "Could not generate AI analysis" : "Не удалось подготовить ИИ-разбор",
     };
     renderRetry(containers[view], messages[view], () => loadSection(view, true));
   }
@@ -1266,6 +1306,7 @@
       h2h: "h2h",
       standings: "standings",
       odds: "odds",
+      ai: "ai-analysis",
     };
     const endpoint = endpoints[view];
     if (
@@ -1283,7 +1324,7 @@
       let succeeded = false;
       try {
         const response = await fetch(
-          `/api/match/${encodeURIComponent(fixtureId)}/${endpoint}`,
+          `/api/match/${encodeURIComponent(fixtureId)}/${endpoint}${view === "ai" ? `?lang=${encodeURIComponent(uiLanguage)}` : ""}`,
         );
         const payload = await response.json();
         if (!response.ok) throw new Error("Section request failed");
@@ -1314,6 +1355,7 @@
           );
         }
         if (view === "odds") renderOdds(payload.odds || []);
+        if (view === "ai") renderAiAnalysis(payload.analysis || null, payload.meta || null);
         failedSections.delete(view);
         succeeded = true;
       } catch {
@@ -3662,6 +3704,7 @@
         h2h: "unknown",
         standings: "unknown",
         odds: "unknown",
+        ai: "unknown",
       };
       renderFixture(payload);
       renderPrediction(payload.prediction, null);
@@ -3687,6 +3730,13 @@
     if (currentMatch) {
       renderFixture(currentMatch);
       if (loadedSections.has("odds")) renderOdds(currentOdds);
+      const aiTab = document.querySelector('[data-view="ai"][aria-selected="true"]');
+      if (aiTab) {
+        loadedSections.delete("ai");
+        failedSections.delete("ai");
+        sourceState.ai = "unknown";
+        loadSection("ai", true);
+      }
     } else {
       updateMatchCenterControls();
       renderShellRoute();
