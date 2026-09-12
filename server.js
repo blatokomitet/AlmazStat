@@ -2317,7 +2317,6 @@ app.get("/api/match/:fixture/standings", async (request, response) => {
     try {
       const key = "sportmonks:standings:" + fixtureId;
       let result = cachedValue(key);
-      let apiRequestCount = 0;
 
       if (result === undefined) {
         const centre = await getSportmonksMatchCentre(fixtureId);
@@ -2341,13 +2340,12 @@ app.get("/api/match/:fixture/standings", async (request, response) => {
           source: Boolean(home && away),
           provider: "sportmonks",
         };
-        apiRequestCount = 2;
         setCachedValue(key, result, 15 * 60 * 1000);
       }
 
       return response.json({
         ...result,
-        meta: { apiRequestCount },
+        meta: { apiRequestCount: 2 },
       });
     } catch (error) {
       console.error("Sportmonks standings request failed:", error?.message || error);
