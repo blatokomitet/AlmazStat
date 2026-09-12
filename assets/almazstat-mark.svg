@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">AlmazStat Diamond Signal</title>
+  <defs>
+    <mask id="diamond-signal-cut">
+      <rect width="64" height="64" fill="#fff"/>
+      <path d="M32 15 17 49h9l2.8-7h10.4l2.8 7h9L36 15h-4Zm.1 13.2 4 9.8h-8l4-9.8Z" fill="#000" fill-rule="evenodd"/>
+      <path d="m9.5 21 14.8 8.3M54.5 21 39.7 29.3M16 50.5l10.2-5.8M48 50.5l-10.2-5.8" stroke="#000" stroke-width="2.4" stroke-linecap="round"/>
+    </mask>
+  </defs>
+  <g mask="url(#diamond-signal-cut)">
+    <path d="M32 3 58 19 51 49 32 61 13 49 6 19 32 3Z" fill="#087A49"/>
+    <path d="M32 3 58 19 39.7 29.3 32 3Z" fill="#22C978"/>
+    <path d="m58 19-7 30-13.2-4.3 1.9-15.4L58 19Z" fill="#10A962"/>
+    <path d="M32 61 51 49 37.8 44.7 32 61Z" fill="#22C978"/>
+  </g>
+</svg>

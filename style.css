@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&family=Space+Mono:wght@400;700&display=swap");
 
 :root {
   --bg: #0b0e12;
@@ -4493,12 +4493,49 @@ body {
 .logo::before,
 .footer-mark::before,
 .sidebar-brand-mark::before {
-  width: 24px;
-  height: 23px;
-  border-radius: 2px;
-  background: linear-gradient(90deg, #22c978 0 22%, transparent 22% 36%, #2ed98a 36% 61%, transparent 61% 75%, #54eba4 75% 100%);
-  content: "";
-  transform: skewY(-8deg);
+  content: none;
+}
+
+.logo img,
+.footer-mark img,
+.sidebar-brand-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.brand-name,
+.brand-wordmark,
+.footer-brand-wordmark {
+  font-family: Sora, Inter, "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  letter-spacing: -0.035em;
+}
+
+.brand-name strong,
+.brand-wordmark strong,
+.footer-brand-wordmark strong {
+  font-weight: 800;
+}
+
+.brand-name span,
+.brand-wordmark span,
+.footer-brand-wordmark span {
+  font-weight: 600;
+}
+
+.brand-name {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.brand-wordmark {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.footer-brand-wordmark {
+  font-size: 13px;
+  line-height: 1;
 }
 
 .header {

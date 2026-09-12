@@ -14,6 +14,10 @@ colors:
   error-red: "#ef4e57"
   hairline: "rgba(224, 232, 255, 0.09)"
 typography:
+  wordmark:
+    fontFamily: "Sora, Inter, DM Sans, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
+    fontWeight: "800 / 600"
+    letterSpacing: "-0.035em"
   display:
     fontFamily: "Inter, DM Sans, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
     fontSize: "clamp(25px, 3vw, 36px)"
@@ -111,6 +115,10 @@ AlmazStat выглядит как компактная операторская 
 - Плотные панели и компактные строки вместо больших декоративных карточек.
 - Inter для интерфейса и Space Mono для времени, счёта и live-статуса.
 - Только реальные API-данные и честные empty/loading/error-состояния.
+
+### Brand Mark
+
+**Diamond Signal** — фирменный знак из асимметричных граней алмаза с отрицательным пространством буквы `A`. Разрезы граней напоминают поток данных, но не превращаются в буквальный график. Wordmark набран Sora: `Almaz` весом 800, `Stat` весом 600. Знак всегда использует только плоские оттенки Signal Green и сохраняет читаемость от 24 px; мячи, щиты, стрелки, неон и объём запрещены.
 
 ## Colors
 
