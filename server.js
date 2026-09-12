@@ -1181,52 +1181,44 @@ app.get("/api/leagues/:leagueId/standings", async (request, response) => {
 
 app.get("/api/teams", async (request, response) => {
   const search = queryText(request.query.search);
-  const league = positiveInteger(request.query.league);
   const season = positiveInteger(request.query.season);
-  if (!search && !(league && season)) {
-    return response.status(400).json({
-      error: {
-        code: "MISSING_TEAM_QUERY",
-        message: "Введите название команды или укажите league и season.",
-      },
-    });
-  }
-  if (!requireApiKey(response)) return;
-
-  const counter = { count: 0 };
-  const cacheKey = `teams:${search}:${league || ""}:${season || ""}`;
+  const featured = request.query.featured === "true" || (!search && !season);
+  if (!sportmonksToken) return response.status(503).json({ error: { code: "SPORTMONKS_NOT_CONFIGURED", message: "Sportmonks не настроен." } });
+  const cacheKey = `sportmonks:teams:${search}:${season || ""}:${featured}`;
   try {
     let result = cachedValue(cacheKey);
-    let rateLimit = null;
     if (result === undefined) {
-      const payload = await fetchApiFootballPayload(
-        "/teams",
-        { search, league, season },
-        counter,
-      );
-      const teams = payload.response
-        .map(normalizeTeam)
-        .filter((team) => team.id !== null);
-      result = { teams: sortByName(teams) };
-      rateLimit = payload.rateLimit;
+      if (search) result = await sportmonksProvider.teamsSearch(search);
+      else if (season) result = await sportmonksProvider.teamsBySeason(season);
+      else {
+        const payload = await sportmonksProvider.fixturesByDate(serverDate());
+        const teams = new Map();
+        for (const match of payload.matches || []) {
+          for (const team of [match.home, match.away]) {
+            if (team?.id && !teams.has(String(team.id))) teams.set(String(team.id), team);
+          }
+        }
+        result = { teams: [...teams.values()], meta: payload.meta };
+      }
+      result = { ...result, teams: sortByName(result.teams || []) };
       setCachedValue(cacheKey, result, 30 * 60 * 1000);
     }
-    return response.json({
-      ...result,
-      source: "API-Football",
-      meta: apiMeta(counter, rateLimit),
-    });
+    return response.json({ ...result, source: "Sportmonks", provider: "sportmonks", apiRequestCount: 0 });
   } catch (error) {
-    console.error("API-Football teams request failed:", error);
+    console.error("Sportmonks teams request failed:", error?.message || error);
     return response.status(502).json({
-      error: {
-        code: "UPSTREAM_UNAVAILABLE",
-        message: "Не удалось загрузить список команд.",
-      },
-      meta: apiMeta(counter),
+      error: { code: "UPSTREAM_UNAVAILABLE", message: "Не удалось загрузить список команд из Sportmonks." },
     });
   }
 });
+
+async function sportmonksTeamProfile(teamId) {
+  const cacheKey = `sportmonks:team:${teamId}`;
+  const cached = cachedValue(cacheKey);
+  if (cached !== undefined) return cached;
+  const profile = await sportmonksProvider.teamById(teamId);
+  return setCachedValue(cacheKey, profile, 15 * 60 * 1000);
+}
 
 app.get("/api/teams/:teamId", async (request, response) => {
   const teamId = positiveInteger(request.params.teamId);
@@ -1235,42 +1227,15 @@ app.get("/api/teams/:teamId", async (request, response) => {
       error: { code: "INVALID_TEAM", message: "Укажите корректный ID команды." },
     });
   }
-  if (!requireApiKey(response)) return;
-
-  const counter = { count: 0 };
-  const cacheKey = `team:${teamId}`;
+  if (!sportmonksToken) return response.status(503).json({ error: { code: "SPORTMONKS_NOT_CONFIGURED", message: "Sportmonks не настроен." } });
   try {
-    let result = cachedValue(cacheKey);
-    let rateLimit = null;
-    if (result === undefined) {
-      const payload = await fetchApiFootballPayload(
-        "/teams",
-        { id: teamId },
-        counter,
-      );
-      const team = normalizeTeam(payload.response[0]);
-      if (!team.id) {
-        return response.status(404).json({
-          error: { code: "TEAM_NOT_FOUND", message: "Команда не найдена." },
-        });
-      }
-      result = { team };
-      rateLimit = payload.rateLimit;
-      setCachedValue(cacheKey, result, 6 * 60 * 60 * 1000);
-    }
-    return response.json({
-      ...result,
-      source: "API-Football",
-      meta: apiMeta(counter, rateLimit),
-    });
+    const result = await sportmonksTeamProfile(teamId);
+    if (!result.team?.id) return response.status(404).json({ error: { code: "TEAM_NOT_FOUND", message: "Команда не найдена." } });
+    return response.json({ ...result, source: "Sportmonks", provider: "sportmonks", apiRequestCount: 0 });
   } catch (error) {
-    console.error("API-Football team request failed:", error);
+    console.error("Sportmonks team request failed:", error?.message || error);
     return response.status(502).json({
-      error: {
-        code: "UPSTREAM_UNAVAILABLE",
-        message: "Не удалось загрузить данные команды.",
-      },
-      meta: apiMeta(counter),
+      error: { code: "UPSTREAM_UNAVAILABLE", message: "Не удалось загрузить данные команды из Sportmonks." },
     });
   }
 });
@@ -1282,39 +1247,14 @@ app.get("/api/teams/:teamId/context", async (request, response) => {
       error: { code: "INVALID_TEAM", message: "Укажите корректный ID команды." },
     });
   }
-  if (!requireApiKey(response)) return;
-
-  const counter = { count: 0 };
-  const cacheKey = `team:context:${teamId}`;
+  if (!sportmonksToken) return response.status(503).json({ error: { code: "SPORTMONKS_NOT_CONFIGURED", message: "Sportmonks не настроен." } });
   try {
-    let result = cachedValue(cacheKey);
-    let rateLimit = null;
-    if (result === undefined) {
-      const payload = await fetchApiFootballPayload(
-        "/leagues",
-        { team: teamId, current: "true" },
-        counter,
-      );
-      const competitions = payload.response
-        .map(normalizeLeague)
-        .filter((league) => league.id !== null && league.seasons.length > 0);
-      result = { team: teamId, competitions };
-      rateLimit = payload.rateLimit;
-      setCachedValue(cacheKey, result, 6 * 60 * 60 * 1000);
-    }
-    return response.json({
-      ...result,
-      source: "API-Football",
-      meta: apiMeta(counter, rateLimit),
-    });
+    const profile = await sportmonksTeamProfile(teamId);
+    return response.json({ team: teamId, competitions: profile.competitions || [], source: "Sportmonks", provider: "sportmonks", apiRequestCount: 0 });
   } catch (error) {
-    console.error("API-Football team context request failed:", error);
+    console.error("Sportmonks team context request failed:", error?.message || error);
     return response.status(502).json({
-      error: {
-        code: "UPSTREAM_UNAVAILABLE",
-        message: "Не удалось определить текущий турнир команды.",
-      },
-      meta: apiMeta(counter),
+      error: { code: "UPSTREAM_UNAVAILABLE", message: "Не удалось определить турниры команды." },
     });
   }
 });
@@ -1323,69 +1263,16 @@ app.get("/api/teams/:teamId/fixtures", async (request, response) => {
   const teamId = positiveInteger(request.params.teamId);
   const league = positiveInteger(request.query.league);
   const season = positiveInteger(request.query.season);
-  if (!teamId || !league || !season) {
-    return response.status(400).json({
-      error: {
-        code: "INVALID_TEAM_FIXTURES_QUERY",
-        message: "Укажите корректные team, league и season.",
-      },
-    });
-  }
-  if (!requireApiKey(response)) return;
-
-  const counter = { count: 0 };
-  const cacheKey = `team:fixtures:${teamId}:${league}:${season}`;
+  if (!teamId) return response.status(400).json({ error: { code: "INVALID_TEAM", message: "Укажите корректный ID команды." } });
+  if (!sportmonksToken) return response.status(503).json({ error: { code: "SPORTMONKS_NOT_CONFIGURED", message: "Sportmonks не настроен." } });
   try {
-    let result = cachedValue(cacheKey);
-    let rateLimit = null;
-    if (result === undefined) {
-      const payload = await fetchApiFootballPayload(
-        "/fixtures",
-        { team: teamId, league, season },
-        counter,
-      );
-      const rawFixtures = payload.response
-        .filter(
-          (fixture) =>
-            fixture.teams?.home?.id === teamId ||
-            fixture.teams?.away?.id === teamId,
-        )
-        .sort(
-          (a, b) =>
-            Number(a.fixture?.timestamp || 0) -
-            Number(b.fixture?.timestamp || 0),
-        );
-      result = {
-        team: teamId,
-        league,
-        season,
-        fixtures: rawFixtures
-          .map(normalizeMatch)
-          .filter((fixture) => fixture.fixtureId !== null),
-        form: rawFixtures
-          .filter((fixture) =>
-            ["FT", "AET", "PEN"].includes(fixture.fixture?.status?.short),
-          )
-          .slice(-10)
-          .reverse()
-          .map((fixture) => normalizeFormMatch(fixture, teamId)),
-      };
-      rateLimit = payload.rateLimit;
-      setCachedValue(cacheKey, result, 5 * 60 * 1000);
-    }
-    return response.json({
-      ...result,
-      source: "API-Football",
-      meta: apiMeta(counter, rateLimit),
-    });
+    const profile = await sportmonksTeamProfile(teamId);
+    const fixtures = (profile.fixtures || []).filter((fixture) => !league || String(fixture.league?.id) === String(league));
+    return response.json({ team: teamId, league, season, fixtures, form: profile.form || [], source: "Sportmonks", provider: "sportmonks", apiRequestCount: 0 });
   } catch (error) {
-    console.error("API-Football team fixtures request failed:", error);
+    console.error("Sportmonks team fixtures request failed:", error?.message || error);
     return response.status(502).json({
-      error: {
-        code: "UPSTREAM_UNAVAILABLE",
-        message: "Не удалось загрузить матчи команды.",
-      },
-      meta: apiMeta(counter),
+      error: { code: "UPSTREAM_UNAVAILABLE", message: "Не удалось загрузить матчи команды из Sportmonks." },
     });
   }
 });

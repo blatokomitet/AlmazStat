@@ -101,3 +101,43 @@ test("standingsBySeason reads official Sportmonks type names and code fallbacks"
   });
   assert.equal(result.meta.includeMode, "rich");
 });
+
+test("teamById maps team profile and latest fixtures", async () => {
+  const result = await withMockedResponse(
+    {
+      id: 83,
+      name: "Team 83",
+      short_code: "T83",
+      image_path: "https://img.test/83.png",
+      founded: 1908,
+      country: { name: "Poland" },
+      venue: { id: 7, name: "Main Stadium", city_name: "Warsaw" },
+      activeSeasons: [{ id: 2026, name: "2026/2027", is_current: true, league_id: 8, league: { id: 8, name: "Top League" } }],
+      latest: [fixture(5, "2026-09-01 18:00:00", 2, 1)],
+    },
+    (provider) => provider.teamById(83),
+  );
+
+  assert.equal(result.team.name, "Team 83");
+  assert.equal(result.team.country, "Poland");
+  assert.equal(result.team.venue.name, "Main Stadium");
+  assert.deepEqual(result.fixtures.map((match) => match.fixtureId), [5]);
+  assert.equal(result.competitions[0].seasons[0].id, 2026);
+});
+
+test("teamsSearch uses the Sportmonks search endpoint", async () => {
+  const originalFetch = globalThis.fetch;
+  let requestedUrl = "";
+  globalThis.fetch = async (url) => {
+    requestedUrl = String(url);
+    return new Response(JSON.stringify({ data: [{ id: 19, name: "Arsenal", image_path: "https://img.test/19.png" }] }), { status: 200, headers: { "content-type": "application/json" } });
+  };
+  try {
+    const provider = createSportmonksProvider({ token: "test-token", baseUrl: "https://sportmonks.test/v3/football" });
+    const result = await provider.teamsSearch("Arsenal");
+    assert.equal(result.teams[0].name, "Arsenal");
+    assert.match(requestedUrl, /\/teams\/search\/Arsenal/);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});

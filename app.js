@@ -1692,15 +1692,18 @@
   async function loadPriorityCatalogLanding(route, routePath, query, sequence) {
     renderDataPage(route, dataListContent(routePath, query, dataState("Загрузка подборки", "loading")));
     try {
+      if (routePath === "/teams") {
+        const payload = await fetchDataJson("/api/teams?featured=true");
+        if (sequence !== dataLoadSequence) return;
+        renderDataPage(route, dataListContent(routePath, query, renderTeamCards(payload.teams || [])));
+        setDataStatus("live");
+        return;
+      }
       const context = await loadPriorityCatalogContext();
-      const endpoint = routePath === "/teams"
-        ? `/api/teams?league=${encodeURIComponent(context.league.id)}&season=${encodeURIComponent(context.season)}`
-        : `/api/players?league=${encodeURIComponent(context.league.id)}&season=${encodeURIComponent(context.season)}&page=1`;
+      const endpoint = `/api/players?league=${encodeURIComponent(context.league.id)}&season=${encodeURIComponent(context.season)}&page=1`;
       const payload = await fetchDataJson(endpoint);
       if (sequence !== dataLoadSequence) return;
-      const body = routePath === "/teams"
-        ? renderTeamCards(payload.teams || [])
-        : renderPlayerCards(payload.players || [], payload.paging, query);
+      const body = renderPlayerCards(payload.players || [], payload.paging, query);
       renderDataPage(route, dataListContent(routePath, query, body));
       setDataStatus("live");
     } catch {
@@ -2894,7 +2897,7 @@
     if (!competitions.length) return "";
     return `<label class="team-context-select">Соревнование<select data-team-context>${competitions.map((competition) => {
       const season = competition.seasons?.find((item) => item.current) || competition.seasons?.[0];
-      return `<option value="${escapeHtml(competition.id)}" ${String(competition.id) === String(teamDetailState.league) ? "selected" : ""}>${escapeHtml(competition.name || competition.id)} · ${escapeHtml(season?.year || "—")}</option>`;
+      return `<option value="${escapeHtml(competition.id)}" ${String(competition.id) === String(teamDetailState.league) ? "selected" : ""}>${escapeHtml(competition.name || competition.id)} · ${escapeHtml(season?.name || season?.year || "—")}</option>`;
     }).join("")}</select></label>`;
   }
   async function loadTeamRoute(id) {
@@ -2909,19 +2912,21 @@
       const contextPayload = contextResult.status === "fulfilled" ? contextResult.value : null;
       teamDetailState.team = teamPayload.team; teamDetailState.context = contextPayload; teamDetailState.contextError = contextResult.status === "rejected"; const competitions = contextPayload?.competitions || [];
       const context = competitions[0]; const season = context?.seasons?.find((item) => item.current) || context?.seasons?.[0];
-      teamDetailState.league = context?.id || null; teamDetailState.season = season?.year || null;
+      teamDetailState.league = context?.id || null; teamDetailState.season = season?.id || season?.year || null;
       renderDataPage(shellRoutes["/teams"], `${renderTeamHero(teamPayload.team)}${teamContextControl(competitions)}${teamTabShell("overview")}`);
       document.title = `AlmazStat — ${teamPayload.team?.name || "Команда"}`;
       setDataStatus(contextResult.status === "rejected" ? "error" : "live"); bindTeamDetail();
       if (contextResult.status === "rejected") document.getElementById("team-panel-overview").innerHTML = teamState("Competition context failed. Retry context-dependent sections; Squad is still available.", "error", "context");
-      else if (competitions.length) ensureTeamFixtures("overview"); else document.getElementById("team-panel-overview").innerHTML = teamState("No current competition was returned. Squad remains available.");
+      else if (competitions.length) ensureTeamFixtures("overview");
+      else if (teamPayload.fixtures?.length) document.getElementById("team-panel-overview").innerHTML = renderTeamOverview(teamPayload.fixtures);
+      else document.getElementById("team-panel-overview").innerHTML = teamState("Последние матчи команды пока недоступны.");
       bindTeamDetail();
       const select = elements.dataContent.querySelector("[data-team-context]");
       select?.addEventListener("change", () => {
         const selected = competitions.find((item) => String(item.id) === select.value);
         const selectedSeason = selected?.seasons?.find((item) => item.current) || selected?.seasons?.[0];
         teamDetailState.league = selected?.id || null;
-        teamDetailState.season = selectedSeason?.year || null;
+        teamDetailState.season = selectedSeason?.id || selectedSeason?.year || null;
         teamDetailState.tab = "overview";
         teamDetailState.filter = "all";
         renderDataPage(shellRoutes["/teams"], `${renderTeamHero(teamDetailState.team)}${teamContextControl(competitions)}${teamTabShell("overview")}`);
