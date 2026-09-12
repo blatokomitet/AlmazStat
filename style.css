@@ -4297,6 +4297,28 @@ body {
   scrollbar-width: thin;
 }
 
+[hidden] {
+  display: none !important;
+}
+
+.image-placeholder {
+  display: grid !important;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  color: #8e98a7;
+}
+
+.image-placeholder svg {
+  width: 72%;
+  height: 72%;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.4;
+}
+
 .site-shell {
   min-height: 100vh;
 }

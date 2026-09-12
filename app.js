@@ -238,6 +238,17 @@
     }
   }
 
+  document.addEventListener("error", (event) => {
+    const image = event.target;
+    if (!(image instanceof HTMLImageElement) || image.dataset.fallbackApplied === "true") return;
+    const placeholder = document.createElement("span");
+    placeholder.className = `${image.className || ""} image-placeholder`.trim();
+    placeholder.setAttribute("aria-hidden", "true");
+    placeholder.dataset.fallbackApplied = "true";
+    placeholder.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 3.5 20 8v8l-8 4.5L4 16V8Z"/><path d="m8.5 10 3.5-2 3.5 2v4L12 16l-3.5-2Z"/></svg>';
+    image.replaceWith(placeholder);
+  }, true);
+
   function setDataStatus(state) {
     const labels = {
       loading: t("loading"),
