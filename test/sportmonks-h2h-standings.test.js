@@ -182,3 +182,20 @@ test("fixturesBySeason sends the Sportmonks season filter", async () => {
     globalThis.fetch = originalFetch;
   }
 });
+
+test("oddsByFixture returns only 1X2 and total-goals markets", async () => {
+  const result = await withMockedResponse(
+    [
+      { bookmaker_id: 2, bookmaker: { id: 2, name: "Bet Test" }, market: { name: "Match Winner" }, label: "Home", value: "1.75", probability: "54.2%" },
+      { bookmaker_id: 2, bookmaker: { id: 2, name: "Bet Test" }, market: { name: "Goals Over/Under" }, label: "Over", total: "2.5", value: "1.91" },
+      { bookmaker_id: 2, bookmaker: { id: 2, name: "Bet Test" }, market: { name: "Both Teams To Score" }, label: "Yes", value: "1.80" },
+    ],
+    (provider) => provider.oddsByFixture(123),
+  );
+
+  assert.deepEqual(result.odds.map((odd) => [odd.marketKind, odd.option, odd.odd]), [
+    ["1x2", "1", "1.75"],
+    ["totals", "Over 2.5", "1.91"],
+  ]);
+  assert.equal(result.meta.provider, "sportmonks");
+});

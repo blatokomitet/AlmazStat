@@ -2221,6 +2221,80 @@ a {
   font-weight: 800;
 }
 
+.odds-bookmaker + .odds-bookmaker {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.odds-bookmaker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.odds-bookmaker-head span,
+.odds-market h3 {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.odds-bookmaker-head strong {
+  font-size: 13px;
+}
+
+.odds-market + .odds-market {
+  margin-top: 16px;
+}
+
+.odds-market h3 {
+  margin: 0 0 8px;
+  color: var(--text);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.odds-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.odds-option {
+  display: grid;
+  min-width: 0;
+  min-height: 58px;
+  align-content: center;
+  gap: 4px;
+  padding: 9px 10px;
+  border: 1px solid rgba(34, 201, 120, .2);
+  border-radius: 12px;
+  background: rgba(34, 201, 120, .07);
+}
+
+.odds-option span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.odds-option strong {
+  color: #c9ffe4;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sidebar-language-switch {
+  width: max-content;
+}
+
 .standings-list {
   display: grid;
   gap: 10px;
@@ -4941,7 +5015,7 @@ body {
 
 @media (max-width: 799px) {
   .header .language-switch {
-    display: none;
+    display: flex;
   }
 
   .dashboard-intro {

@@ -9,8 +9,99 @@
     ru: { loading: "ЗАГРУЗКА", live: "ДАННЫЕ АКТУАЛЬНЫ", error: "ОШИБКА ДАННЫХ", statisticsUnavailable: "Статистика матча недоступна", eventsUnavailable: "События матча недоступны", lineupsUnavailable: "Составы матча недоступны" },
     en: { loading: "LOADING", live: "DATA LIVE", error: "DATA ERROR", statisticsUnavailable: "Match statistics unavailable", eventsUnavailable: "Match events unavailable", lineupsUnavailable: "Lineups unavailable" },
   };
+  const phrasePairs = [
+    ["Футбол · данные · контекст", "Football · data · context"],
+    ["Главная", "Home"], ["Матчи", "Matches"], ["Лиги", "Leagues"], ["Команды", "Teams"],
+    ["Статистика", "Statistics"], ["Новости", "News"], ["Игроки", "Players"],
+    ["Сегодня в футболе", "Football today"], ["Матч-центр", "Match centre"],
+    ["Соревнования", "Competitions"], ["Клубы", "Clubs"], ["Поиск игроков", "Player search"],
+    ["Лиги и сезоны", "Leagues and seasons"], ["Новости футбола", "Football news"],
+    ["Матчи, турниры и контекст на одной ленте.", "Matches, competitions and context in one feed."],
+    ["Дата, статус и быстрый переход к деталям матча.", "Date, status and quick access to match details."],
+    ["Главные турниры — сверху, остальные доступны через поиск.", "Top competitions first; find the rest through search."],
+    ["Популярные клубы и поиск по каталогу.", "Popular clubs and catalogue search."],
+    ["Поиск футболистов и сезонный контекст.", "Player search and season context."],
+    ["Таблицы, лидеры и показатели выбранного турнира.", "Tables, leaders and stats for the selected competition."],
+    ["Новости, трансферы и контекст матчей.", "News, transfers and match context."],
+    ["Быстрый доступ", "Quick access"], ["LIVE и расписание", "LIVE and schedule"],
+    ["Все турниры", "All competitions"], ["Футбольные данные в реальном времени", "Live football data"],
+    ["Сегодня", "Today"], ["Вчера", "Yesterday"], ["Завтра", "Tomorrow"],
+    ["Все", "All"], ["Скоро", "Upcoming"], ["Завершённые", "Finished"], ["Завершён", "Finished"],
+    ["Загрузка", "Loading"], ["Загрузка матчей", "Loading matches"], ["Загрузка аналитики", "Loading analysis"],
+    ["Загрузка данных", "Loading data"], ["Загрузка команды", "Loading team"], ["Загрузка лиг", "Loading leagues"],
+    ["Загрузка лиги", "Loading league"], ["Загрузка новостей", "Loading news"], ["Загрузка профиля", "Loading profile"],
+    ["Матчи загружаются", "Matches are loading"], ["Команда или лига", "Team or league"],
+    ["Все матчи", "All matches"], ["Нет данных", "No data"], ["Ошибка данных", "Data error"],
+    ["Источник данных недоступен.", "Data source unavailable."], ["Проверьте соединение.", "Check your connection."],
+    ["Матчи недоступны", "Matches unavailable"], ["Матчи недоступны · проверьте соединение", "Matches unavailable · check your connection"],
+    ["Обзор", "Overview"], ["События", "Events"], ["Составы", "Lineups"], ["Форма", "Form"],
+    ["Очные", "H2H"], ["Таблица", "Standings"], ["Коэффициенты", "Odds"],
+    ["Главный прогноз", "Main prediction"], ["Источник данных", "Data source"], ["Прогноз матча", "Match prediction"],
+    ["Прогноз недоступен", "Prediction unavailable"], ["Победа 1", "Home win"], ["Ничья", "Draw"], ["Победа 2", "Away win"],
+    ["Срез матча", "Match snapshot"], ["Только доступные данные", "Available data only"],
+    ["Дата и время", "Date and time"], ["Начало матча", "Kick-off"], ["Хозяева", "Home"], ["Гости", "Away"],
+    ["Статистика матча недоступна", "Match statistics unavailable"], ["События матча недоступны", "Match events unavailable"],
+    ["Составы матча недоступны", "Lineups unavailable"], ["Коэффициенты недоступны", "Odds unavailable"],
+    ["Не удалось загрузить коэффициенты", "Could not load odds"], ["Повторить", "Retry"],
+    ["Доступные данные", "Available data"], ["Букмекер", "Bookmaker"], ["Исход матча", "Match result"],
+    ["Тотал голов", "Total goals"], ["Больше", "Over"], ["Меньше", "Under"],
+    ["Сезон", "Season"], ["Тур", "Round"], ["Статус", "Status"], ["Счёт", "Score"], ["Дата", "Date"],
+    ["Последние матчи", "Latest matches"], ["Последние матчи команды пока недоступны.", "Latest team matches are unavailable."],
+    ["Профиль команды", "Team profile"], ["Команда", "Team"], ["Лига", "League"],
+    ["Все команды", "All teams"], ["Все лиги", "All leagues"], ["Найти", "Search"],
+    ["Например, Arsenal", "For example, Arsenal"], ["Например, Premier League", "For example, Premier League"],
+    ["Необязательно", "Optional"], ["Команды по этому запросу не найдены", "No teams found for this search"],
+    ["Лиги по этому запросу не найдены", "No leagues found for this search"],
+    ["Не удалось загрузить профиль команды.", "Could not load team profile."], ["Не удалось загрузить лиги.", "Could not load leagues."],
+    ["Таблица недоступна для этого турнира", "Standings are unavailable for this competition"],
+    ["Не удалось загрузить турнирную таблицу", "Could not load standings"], ["Не удалось загрузить форму команд", "Could not load team form"],
+    ["Не удалось загрузить очные встречи", "Could not load head-to-head matches"],
+    ["Расписание матчей", "Match schedule"], ["Матчи сегодня", "Today's matches"], ["Сегодня матчей нет", "No matches today"],
+    ["LIVE сейчас", "LIVE now"], ["Все LIVE", "All LIVE"], ["Сейчас матчей нет", "No live matches now"],
+    ["Матч дня", "Match of the day"], ["Открыть матч-центр", "Open match centre"], ["Расписание игрового дня", "Matchday schedule"],
+    ["Поиск команд, лиг, матчей…", "Search teams, leagues, matches…"],
+    ["Футбол сегодня", "Football today"], ["Футбол вчера", "Football yesterday"], ["Футбол завтра", "Football tomorrow"],
+    ["матч", "match"], ["матча", "matches"], ["матчей", "matches"], ["лига", "league"], ["лиги", "leagues"], ["лиг", "leagues"],
+    ["Все игроки", "All players"], ["Бомбардиры", "Top scorers"], ["Ассисты", "Assists"], ["Голы и передачи", "Goals and assists"],
+    ["Игрок", "Player"], ["Профиль игрока", "Player profile"], ["Национальность", "Nationality"],
+    ["Возраст", "Age"], ["Дата рождения", "Date of birth"], ["Рост", "Height"], ["Вес", "Weight"],
+    ["Голы", "Goals"], ["Передачи", "Assists"], ["Минуты", "Minutes"], ["Рейтинг", "Rating"],
+    ["Карточки", "Cards"], ["Жёлтые", "Yellow"], ["Красные", "Red"], ["Удары", "Shots"], ["В створ", "On target"],
+    ["Сейвы", "Saves"], ["Отборы", "Tackles"], ["Перехваты", "Interceptions"], ["Пасы", "Passes"],
+    ["← Назад", "← Back"], ["← Все матчи", "← All matches"], ["Да", "Yes"], ["Нет", "No"],
+  ];
+  const ruToEn = new Map(phrasePairs);
+  const enToRu = new Map(phrasePairs.map(([ru, en]) => [en, ru]));
   let uiLanguage = localStorage.getItem("almazstat.language") === "en" ? "en" : "ru";
   function t(key) { return languageCopy[uiLanguage]?.[key] || languageCopy.ru[key] || key; }
+  function translatePhrase(value) {
+    const source = String(value ?? "");
+    const trimmed = source.trim();
+    if (!trimmed) return source;
+    const translated = (uiLanguage === "en" ? ruToEn : enToRu).get(trimmed);
+    return translated ? source.replace(trimmed, translated) : source;
+  }
+  function translateTree(root = document.body) {
+    if (!root) return;
+    const translateElement = (element) => {
+      for (const attribute of ["placeholder", "title", "aria-label"]) {
+        if (element.hasAttribute?.(attribute)) {
+          element.setAttribute(attribute, translatePhrase(element.getAttribute(attribute)));
+        }
+      }
+    };
+    if (root.nodeType === Node.TEXT_NODE) {
+      if (!/^(SCRIPT|STYLE)$/.test(root.parentElement?.tagName || "")) root.nodeValue = translatePhrase(root.nodeValue);
+      return;
+    }
+    if (root.nodeType === Node.ELEMENT_NODE) translateElement(root);
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode())) {
+      if (node.nodeType === Node.ELEMENT_NODE) translateElement(node);
+      else if (!/^(SCRIPT|STYLE)$/.test(node.parentElement?.tagName || "")) node.nodeValue = translatePhrase(node.nodeValue);
+    }
+  }
   function applyLanguage() {
     document.documentElement.lang = uiLanguage;
     document.querySelectorAll("[data-language]").forEach((button) => {
@@ -20,7 +111,9 @@
     });
     const labels = uiLanguage === "en" ? { overview:"Overview", statistics:"Statistics", events:"Events", lineups:"Lineups", form:"Form", h2h:"H2H", standings:"Standings", odds:"Odds" } : { overview:"Обзор", statistics:"Статистика", events:"События", lineups:"Составы", form:"Форма", h2h:"Очные", standings:"Таблица", odds:"Коэффициенты" };
     Object.entries(labels).forEach(([view, text]) => { const node = document.querySelector(`[data-view="${view}"]`); if (node) node.textContent = text; });
+    translateTree(document.body);
     if (window.__almazstatRefreshLanguage) window.__almazstatRefreshLanguage();
+    document.title = document.title.split(" — ").map(translatePhrase).join(" — ");
   }
   document.addEventListener("click", (event) => {
     const button = event.target.closest?.("[data-language]");
@@ -36,6 +129,9 @@
   }
 
   queueMicrotask(applyLanguage);
+  new MutationObserver((records) => {
+    for (const record of records) for (const node of record.addedNodes) translateTree(node);
+  }).observe(document.body, { childList: true, subtree: true });
 
   const fixtureFromQuery = (params.get("fixture") || "").trim();
   const fixtureFromTelegram = (
@@ -120,6 +216,7 @@
   const loadingSections = new Map();
   let currentMatch = null;
   let currentForm = null;
+  let currentOdds = [];
   let sourceState = {
     fixture: true,
     prediction: false,
@@ -261,11 +358,11 @@
   }
 
   function formatDate(value, compact) {
-    if (!value) return "Нет данных";
+    if (!value) return translatePhrase("Нет данных");
     const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "Нет данных";
+    if (Number.isNaN(date.getTime())) return translatePhrase("Нет данных");
 
-    return new Intl.DateTimeFormat("ru-RU", {
+    return new Intl.DateTimeFormat(uiLanguage === "en" ? "en-GB" : "ru-RU", {
       day: "2-digit",
       month: compact ? "2-digit" : "short",
       year: compact ? "2-digit" : "numeric",
@@ -329,7 +426,7 @@
   function formatMatchDay(value) {
     const date = new Date(`${value}T12:00:00`);
     if (Number.isNaN(date.getTime())) return "Нет данных";
-    return new Intl.DateTimeFormat("ru-RU", {
+    return new Intl.DateTimeFormat(uiLanguage === "en" ? "en-GB" : "ru-RU", {
       day: "numeric",
       month: "long",
       year: "numeric",
@@ -340,13 +437,30 @@
     if (!value) return "Нет данных";
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return "Нет данных";
-    return new Intl.DateTimeFormat("ru-RU", {
+    return new Intl.DateTimeFormat(uiLanguage === "en" ? "en-GB" : "ru-RU", {
       hour: "2-digit",
       minute: "2-digit",
     }).format(date);
   }
 
+  function fixtureStatusLabel(status = {}) {
+    const short = String(status.short || "").toUpperCase();
+    if (liveStatuses.has(short)) {
+      return status.elapsed !== null && status.elapsed !== undefined ? `${status.elapsed}'` : "LIVE";
+    }
+    if (finishedStatuses.has(short)) return uiLanguage === "en" ? "Finished" : "Завершён";
+    if (upcomingStatuses.has(short)) return uiLanguage === "en" ? "Not started" : "Не начался";
+    const labels = {
+      PST: ["Перенесён", "Postponed"], CANC: ["Отменён", "Cancelled"],
+      SUSP: ["Приостановлен", "Suspended"], INT: ["Прерван", "Interrupted"],
+      HT: ["Перерыв", "Half time"], ET: ["Дополнительное время", "Extra time"],
+    };
+    if (labels[short]) return labels[short][uiLanguage === "en" ? 1 : 0];
+    return status.long || status.short || translatePhrase("Нет данных");
+  }
+
   function countLabel(value, one, few, many) {
+    if (uiLanguage === "en") return `${value} ${ruToEn.get(value === 1 ? one : many) || (value === 1 ? one : many)}`;
     const mod100 = value % 100;
     const mod10 = value % 10;
     if (mod100 >= 11 && mod100 <= 14) return `${value} ${many}`;
@@ -385,8 +499,7 @@
     elements.homeName.textContent = home.name || "Нет данных";
     elements.awayName.textContent = away.name || "Нет данных";
     elements.matchScore.textContent = `${goals.home ?? "—"} : ${goals.away ?? "—"}`;
-    elements.fixtureStatus.textContent =
-      status.long || status.short || "Нет данных";
+    elements.fixtureStatus.textContent = fixtureStatusLabel(status);
     elements.matchDate.textContent = formatDate(fixture.date, false);
     const setEntityLink = (element, kind, id) => {
       if (id === null || id === undefined) {
@@ -665,26 +778,30 @@
   }
 
   function renderOdds(odds) {
-    const rows = (odds || []).slice(0, 24);
+    const rows = (odds || []).slice(0, 36);
+    currentOdds = rows;
     if (rows.length === 0) {
       elements.oddsContent.innerHTML =
         `<div class="empty-state">Коэффициенты недоступны</div>`;
       return;
     }
 
-    elements.oddsContent.innerHTML = rows
-      .map(
-        (row) => `
-          <div class="list-row">
-            <div class="list-primary">
-              ${escapeHtml(row.option || "Нет данных")}
-              <div class="list-secondary">${escapeHtml(row.bookmaker)} · ${escapeHtml(row.market)}</div>
-            </div>
-            <div class="list-value">${escapeHtml(row.odd)}</div>
-          </div>
-        `,
-      )
-      .join("");
+    const bookmakers = [...new Set(rows.map((row) => row.bookmaker || "Sportmonks"))].slice(0, 3);
+    elements.oddsContent.innerHTML = bookmakers.map((bookmaker) => {
+      const bookmakerRows = rows.filter((row) => (row.bookmaker || "Sportmonks") === bookmaker);
+      return `
+        <article class="odds-bookmaker">
+          <div class="odds-bookmaker-head"><span>Букмекер</span><strong>${escapeHtml(bookmaker)}</strong></div>
+          ${["1x2", "totals"].map((kind) => {
+            const marketRows = bookmakerRows.filter((row) => row.marketKind === kind).slice(0, kind === "1x2" ? 3 : 8);
+            if (!marketRows.length) return "";
+            return `<div class="odds-market"><h3>${kind === "1x2" ? "Исход матча" : "Тотал голов"}</h3><div class="odds-grid">${marketRows.map((row) => {
+              const option = String(row.option || "Нет данных").replace(/^Over\b/i, uiLanguage === "ru" ? "Больше" : "Over").replace(/^Under\b/i, uiLanguage === "ru" ? "Меньше" : "Under");
+              return `<div class="odds-option"><span>${escapeHtml(option)}</span><strong>${escapeHtml(row.odd ?? "—")}</strong></div>`;
+            }).join("")}</div></div>`;
+          }).join("")}
+        </article>`;
+    }).join("");
   }
 
   function renderStatisticTeam(team) {
@@ -1219,9 +1336,9 @@
         ? `${status.elapsed}'`
         : "LIVE";
     }
-    if (finishedStatuses.has(status.short)) return "Завершён";
+    if (finishedStatuses.has(status.short)) return fixtureStatusLabel(status);
     if (upcomingStatuses.has(status.short)) return formatMatchTime(match.date);
-    return status.long || status.short || "Нет данных";
+    return fixtureStatusLabel(status);
   }
 
   function matchesForCurrentView() {
@@ -3537,6 +3654,16 @@
   }
 
   setupTabs();
+  window.__almazstatRefreshLanguage = function () {
+    if (currentMatch) {
+      renderFixture(currentMatch);
+      if (loadedSections.has("odds")) renderOdds(currentOdds);
+    } else {
+      updateMatchCenterControls();
+      renderShellRoute();
+    }
+    setDataStatus(elements.dataStatus?.dataset?.state || "loading");
+  };
   restoreMatchCenterState();
   setupMatchCenter();
   setupShellRouting();

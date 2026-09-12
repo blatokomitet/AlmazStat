@@ -432,34 +432,6 @@ const statisticsLeaderEndpoints = {
   red: "/players/topredcards",
 };
 
-function normalizeOdds(oddsResponse) {
-  const rows = [];
-  const preferredMarkets = new Set([
-    "match winner",
-    "goals over/under",
-    "both teams score",
-    "double chance",
-  ]);
-  for (const fixtureOdds of oddsResponse || []) {
-    for (const bookmaker of fixtureOdds.bookmakers || []) {
-      for (const market of bookmaker.bets || []) {
-        for (const option of market.values || []) {
-          rows.push({
-            bookmaker: bookmaker.name ?? null,
-            market: market.name ?? null,
-            option: option.value ?? null,
-            odd: option.odd ?? null,
-          });
-        }
-      }
-    }
-  }
-  const preferred = rows.filter((row) =>
-    preferredMarkets.has(String(row.market || "").toLowerCase()),
-  );
-  return (preferred.length ? preferred : rows).slice(0, 24);
-}
-
 function normalizePrediction(prediction) {
   const data = prediction?.predictions;
   if (!data) return null;
@@ -2206,47 +2178,32 @@ app.get("/api/match/:fixture/standings", async (request, response) => {
 });
 
 app.get("/api/match/:fixture/odds", async (request, response) => {
-  if (!requireApiKey(response)) return;
+  if (!sportmonksToken) {
+    return response.status(503).json({
+      error: { code: "SPORTMONKS_NOT_CONFIGURED", message: "Sportmonks не настроен." },
+    });
+  }
   const fixtureId = String(request.params.fixture || "").trim();
-  const counter = { count: 0 };
+  if (!/^\d+$/.test(fixtureId)) {
+    return response.status(400).json({
+      error: { code: "INVALID_FIXTURE", message: "Некорректный идентификатор матча." },
+    });
+  }
 
   try {
-    const fixtureData = await getFixtureDetails(fixtureId, counter);
-    if (!fixtureData) {
-      return response.status(404).json({
-        error: { code: "FIXTURE_NOT_FOUND", message: "Матч не найден." },
-      });
-    }
-
-    const key = `odds:${fixtureId}`;
+    const key = `sportmonks:odds:${fixtureId}`;
     let result = cachedValue(key);
     if (result === undefined) {
-      const oddsResponse = await fetchApiFootball(
-        "/odds",
-        { fixture: fixtureId },
-        counter,
-      );
-      const odds = normalizeOdds(oddsResponse);
-      result = { odds, source: odds.length > 0 };
-      const finished = ["FT", "AET", "PEN"].includes(
-        fixtureData.fixture.status.short,
-      );
-      setCachedValue(
-        key,
-        result,
-        finished ? 24 * 60 * 60 * 1000 : 5 * 60 * 1000,
-      );
+      const payload = await sportmonksProvider.oddsByFixture(fixtureId);
+      result = { ...payload, source: payload.odds.length > 0, provider: "sportmonks" };
+      setCachedValue(key, result, 5 * 60 * 1000);
     }
 
-    return response.json({
-      ...result,
-      meta: { apiRequestCount: counter.count },
-    });
+    return response.json(result);
   } catch (error) {
-    console.error("API-Football odds request failed:", error);
+    console.error("Sportmonks odds request failed:", error);
     return response.status(502).json({
       error: { code: "UPSTREAM_UNAVAILABLE", message: "Не удалось загрузить коэффициенты." },
-      meta: { apiRequestCount: counter.count },
     });
   }
 });
