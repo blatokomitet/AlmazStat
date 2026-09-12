@@ -1227,47 +1227,31 @@ app.get("/api/teams/:teamId/statistics", async (request, response) => {
   const teamId = positiveInteger(request.params.teamId);
   const league = positiveInteger(request.query.league);
   const season = positiveInteger(request.query.season);
-  if (!teamId || !league || !season) {
+  if (!teamId || !season) {
     return response.status(400).json({
       error: {
         code: "INVALID_TEAM_STATISTICS_QUERY",
-        message: "Укажите корректные team, league и season.",
+        message: "Укажите корректные team и season.",
       },
     });
   }
-  if (!requireApiKey(response)) return;
-
-  const counter = { count: 0 };
-  const cacheKey = `team:statistics:${teamId}:${league}:${season}`;
+  if (!sportmonksToken) return response.status(503).json({ error: { code: "SPORTMONKS_NOT_CONFIGURED", message: "Sportmonks не настроен." } });
+  const cacheKey = `sportmonks:team:statistics:${teamId}:${season}`;
   try {
     let result = cachedValue(cacheKey);
-    let rateLimit = null;
     if (result === undefined) {
-      const payload = await fetchApiFootballPayload(
-        "/teams/statistics",
-        { team: teamId, league, season },
-        counter,
-      );
-      const statistics = payload.response?.team?.id
-        ? normalizeTeamStatistics(payload.response)
-        : null;
-      result = { team: teamId, league, season, statistics };
-      rateLimit = payload.rateLimit;
+      const payload = await sportmonksProvider.teamStatisticsBySeason(season, teamId);
+      result = { team: teamId, league, season, statistics: payload.statistics, meta: payload.meta };
       setCachedValue(cacheKey, result, 15 * 60 * 1000);
     }
-    return response.json({
-      ...result,
-      source: "API-Football",
-      meta: apiMeta(counter, rateLimit),
-    });
+    return response.json({ ...result, source: "Sportmonks", provider: "sportmonks", apiRequestCount: 0 });
   } catch (error) {
-    console.error("API-Football team statistics request failed:", error);
+    console.error("Sportmonks team statistics request failed:", error?.message || error);
     return response.status(502).json({
       error: {
         code: "UPSTREAM_UNAVAILABLE",
-        message: "Не удалось загрузить статистику команды.",
+        message: "Не удалось загрузить статистику команды из Sportmonks.",
       },
-      meta: apiMeta(counter),
     });
   }
 });
@@ -1999,17 +1983,21 @@ async function collectAiMatchFacts(fixtureId) {
   const centre = await getSportmonksMatchCentre(fixtureId);
   if (!centre?.home?.id || !centre?.away?.id) return null;
 
-  const [formResult, h2hResult, standingsResult, oddsResult] = await Promise.allSettled([
+  const [formResult, h2hResult, standingsResult, oddsResult, homeSeasonStatsResult, awaySeasonStatsResult] = await Promise.allSettled([
     loadMatchRecentForm({ fixtureId, getMatchCentre: getSportmonksMatchCentre, teamRecentForm: sportmonksProvider.teamRecentForm, limit: 5 }),
     sportmonksProvider.headToHead(centre.home.id, centre.away.id, { limit: 5 }),
     centre?.league?.season ? sportmonksProvider.standingsBySeason(centre.league.season) : Promise.resolve({ standings: [] }),
     sportmonksProvider.oddsByFixture(fixtureId),
+    centre?.league?.season ? sportmonksProvider.teamStatisticsBySeason(centre.league.season, centre.home.id) : Promise.resolve({ statistics: null }),
+    centre?.league?.season ? sportmonksProvider.teamStatisticsBySeason(centre.league.season, centre.away.id) : Promise.resolve({ statistics: null }),
   ]);
 
   const form = formResult.status === "fulfilled" ? formResult.value?.form : null;
   const h2h = h2hResult.status === "fulfilled" ? h2hResult.value?.matches || [] : [];
   const table = standingsResult.status === "fulfilled" ? standingsResult.value?.standings || [] : [];
   const odds = oddsResult.status === "fulfilled" ? oddsResult.value?.odds || [] : [];
+  const homeSeasonStats = homeSeasonStatsResult.status === "fulfilled" ? homeSeasonStatsResult.value?.statistics || null : null;
+  const awaySeasonStats = awaySeasonStatsResult.status === "fulfilled" ? awaySeasonStatsResult.value?.statistics || null : null;
   const statistics = sportmonksStatisticsForUi(centre);
   const standing = (teamId) => table.find((row) => Number(row?.team?.id) === Number(teamId)) || null;
   const compactMatches = (rows) => (rows || []).slice(0, 5).map((row) => ({
@@ -2042,6 +2030,10 @@ async function collectAiMatchFacts(fixtureId) {
     recentForm: { home: compactMatches(form?.home), away: compactMatches(form?.away) },
     headToHead: compactMatches(h2h),
     standings: { home: standing(centre.home.id), away: standing(centre.away.id) },
+    seasonStatistics: {
+      home: homeSeasonStats ? { played: homeSeasonStats.played, wins: homeSeasonStats.wins, draws: homeSeasonStats.draws, losses: homeSeasonStats.losses, goalsFor: homeSeasonStats.goalsFor, goalsAgainst: homeSeasonStats.goalsAgainst, cleanSheets: homeSeasonStats.cleanSheets, failedToScore: homeSeasonStats.failedToScore } : null,
+      away: awaySeasonStats ? { played: awaySeasonStats.played, wins: awaySeasonStats.wins, draws: awaySeasonStats.draws, losses: awaySeasonStats.losses, goalsFor: awaySeasonStats.goalsFor, goalsAgainst: awaySeasonStats.goalsAgainst, cleanSheets: awaySeasonStats.cleanSheets, failedToScore: awaySeasonStats.failedToScore } : null,
+    },
     expectedGoals: (centre.expectedGoals || []).map((row) => ({
       team: Number(row.teamId) === Number(centre.home.id) ? centre.home.name : Number(row.teamId) === Number(centre.away.id) ? centre.away.name : row.teamId,
       type: row?.type?.name ?? row?.type?.developerName ?? null,
@@ -2062,6 +2054,7 @@ async function collectAiMatchFacts(fixtureId) {
       form: Boolean(form?.home?.length || form?.away?.length),
       headToHead: h2h.length > 0,
       standings: table.length > 0,
+      seasonStatistics: Boolean(homeSeasonStats || awaySeasonStats),
       statistics: statistics.rows.length > 0,
       expectedGoals: Boolean(centre.expectedGoals?.length),
       events: Boolean(centre.events?.length),

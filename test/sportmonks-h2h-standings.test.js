@@ -223,3 +223,36 @@ test("fixtureById requests and maps xG plus detailed lineups for AI analysis", a
     globalThis.fetch = originalFetch;
   }
 });
+
+test("teamStatisticsBySeason uses the season filter and normalizes team totals", async () => {
+  const originalFetch = globalThis.fetch;
+  let requestedUrl = "";
+  const detail = (developerName, value) => ({ value, type: { developer_name: developerName, name: developerName } });
+  globalThis.fetch = async (url) => {
+    requestedUrl = String(url);
+    return new Response(JSON.stringify({ data: [{
+      id: 83,
+      name: "Season Team",
+      statistics: [{ id: 701, season_id: 26763, details: [
+        detail("WIN", { all: { count: 10 }, home: { count: 6 }, away: { count: 4 } }),
+        detail("DRAW", { all: { count: 3 }, home: { count: 1 }, away: { count: 2 } }),
+        detail("LOST", { all: { count: 2 }, home: { count: 1 }, away: { count: 1 } }),
+        detail("GOALS", { all: { count: 31 }, home: { count: 20 }, away: { count: 11 } }),
+        detail("GOALS_CONCEDED", { all: { count: 12 }, home: { count: 5 }, away: { count: 7 } }),
+      ] }],
+    }] }), { status: 200, headers: { "content-type": "application/json" } });
+  };
+  try {
+    const provider = createSportmonksProvider({ token: "test-token", baseUrl: "https://sportmonks.test/v3/football" });
+    const result = await provider.teamStatisticsBySeason(26763, 83);
+    const url = new URL(requestedUrl);
+    assert.equal(url.pathname, "/v3/football/teams/seasons/26763");
+    assert.equal(url.searchParams.get("include"), "statistics.details.type");
+    assert.equal(url.searchParams.get("filters"), "teamstatisticSeasons:26763");
+    assert.deepEqual(result.statistics.played, { home: 8, away: 7, total: 15 });
+    assert.deepEqual(result.statistics.goalsFor.total, { home: 20, away: 11, total: 31 });
+    assert.equal(result.statistics.details.length, 5);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
