@@ -3040,6 +3040,129 @@
     </button>`;
   }
 
+  function dashboardTeamMark(team, className = "") {
+    if (!team?.logo) {
+      return `<span class="dashboard-team-mark ${escapeHtml(className)}" aria-hidden="true">◇</span>`;
+    }
+    return `<img class="dashboard-team-mark ${escapeHtml(className)}" src="${escapeHtml(team.logo)}" alt="" loading="lazy" />`;
+  }
+
+  function dashboardMatchWeight(match) {
+    const status = match?.status?.short;
+    const statusWeight = liveStatuses.has(status)
+      ? 1000
+      : upcomingStatuses.has(status)
+        ? 500
+        : finishedStatuses.has(status)
+          ? 0
+          : 100;
+    const positions = [match?.home?.tablePosition, match?.away?.tablePosition]
+      .map(Number)
+      .filter((value) => Number.isFinite(value) && value > 0);
+    const tableWeight = positions.reduce((sum, value) => sum + Math.max(0, 22 - Math.min(value, 22)), 0);
+    return statusWeight + Math.max(0, 120 - priorityRank(match) * 16) + tableWeight;
+  }
+
+  function dashboardSelectFeatured(matches) {
+    return [...(matches || [])].sort((a, b) =>
+      dashboardMatchWeight(b) - dashboardMatchWeight(a) ||
+      new Date(a?.date || 0).getTime() - new Date(b?.date || 0).getTime(),
+    )[0] || null;
+  }
+
+  function dashboardTeamPosition(team) {
+    const position = Number(team?.tablePosition);
+    return Number.isFinite(position) && position > 0 ? `${position} место` : "Позиция не указана";
+  }
+
+  function dashboardFeaturedFixture(match) {
+    if (!match) return `<div class="dashboard-empty"><strong>Матчей на сегодня нет</strong><span>Расписание появится после обновления данных.</span></div>`;
+    const live = liveStatuses.has(match?.status?.short);
+    const scoreAvailable = showMatchScore(match);
+    const centreValue = scoreAvailable
+      ? `${match?.goals?.home ?? "—"} : ${match?.goals?.away ?? "—"}`
+      : formatMatchTime(match?.date);
+    return `<button class="dashboard-featured-match${live ? " is-live" : ""}" type="button" data-dashboard-fixture="${escapeHtml(match?.fixtureId || "")}" aria-label="Открыть матч ${escapeHtml(match?.home?.name || "")} — ${escapeHtml(match?.away?.name || "")}">
+      <span class="dashboard-featured-top">
+        <b>Матч дня</b>
+        <span>${escapeHtml(match?.league?.name || "Соревнование")}</span>
+      </span>
+      <span class="dashboard-featured-body">
+        <span class="dashboard-featured-team">
+          ${dashboardTeamMark(match?.home, "is-featured")}
+          <strong>${escapeHtml(match?.home?.name || "Команда не указана")}</strong>
+          <small>${escapeHtml(dashboardTeamPosition(match?.home))}</small>
+        </span>
+        <span class="dashboard-featured-centre">
+          <strong>${escapeHtml(centreValue)}</strong>
+          <i>${escapeHtml(upcomingStatuses.has(match?.status?.short) ? "Начало матча" : matchStatusLabel(match))}</i>
+        </span>
+        <span class="dashboard-featured-team">
+          ${dashboardTeamMark(match?.away, "is-featured")}
+          <strong>${escapeHtml(match?.away?.name || "Команда не указана")}</strong>
+          <small>${escapeHtml(dashboardTeamPosition(match?.away))}</small>
+        </span>
+      </span>
+    </button>`;
+  }
+
+  function dashboardNextMatches(matches) {
+    if (!matches.length) return `<div class="dashboard-empty"><strong>Других матчей пока нет</strong></div>`;
+    return `<div class="dashboard-next-list">${matches.map((match) => {
+      const score = showMatchScore(match)
+        ? `${match?.goals?.home ?? "—"} : ${match?.goals?.away ?? "—"}`
+        : formatMatchTime(match?.date);
+      return `<button class="dashboard-next-match${liveStatuses.has(match?.status?.short) ? " is-live" : ""}" type="button" data-dashboard-fixture="${escapeHtml(match?.fixtureId || "")}">
+        <span class="dashboard-next-time">${escapeHtml(score)}</span>
+        <span class="dashboard-next-teams">
+          <span>${dashboardTeamMark(match?.home)}<b>${escapeHtml(match?.home?.name || "—")}</b></span>
+          <span>${dashboardTeamMark(match?.away)}<b>${escapeHtml(match?.away?.name || "—")}</b></span>
+        </span>
+        <small>${escapeHtml(match?.league?.name || "Соревнование")}</small>
+      </button>`;
+    }).join("")}</div>`;
+  }
+
+  function dashboardLiveBand(matches) {
+    if (!matches.length) {
+      return `<div class="dashboard-live-copy"><strong>Сейчас матчей нет</strong><span>Здесь появятся счёт и статус после стартового свистка.</span></div><a data-route="/matches" href="/matches">Матч-центр</a>`;
+    }
+    const first = matches[0];
+    return `<button class="dashboard-live-match" type="button" data-dashboard-fixture="${escapeHtml(first?.fixtureId || "")}">
+      <strong>${escapeHtml(first?.home?.name || "—")} <span>${escapeHtml(first?.goals?.home ?? "—")} : ${escapeHtml(first?.goals?.away ?? "—")}</span> ${escapeHtml(first?.away?.name || "—")}</strong>
+      <small>${escapeHtml(matchStatusLabel(first))}${matches.length > 1 ? ` · ещё ${matches.length - 1}` : ""}</small>
+    </button><a data-route="/matches" href="/matches">Все LIVE</a>`;
+  }
+
+  function dashboardSchedule(matches) {
+    const groups = new Map();
+    for (const match of matches) {
+      const league = match?.league || {};
+      const key = `${league.id ?? "unknown"}:${league.name ?? ""}`;
+      if (!groups.has(key)) groups.set(key, { league, matches: [] });
+      groups.get(key).matches.push(match);
+    }
+    const orderedGroups = [...groups.values()].sort((a, b) => priorityRank(a.league) - priorityRank(b.league));
+    if (!orderedGroups.length) return `<div class="dashboard-empty"><strong>Расписание пока пусто</strong><span>Попробуйте обновить данные немного позже.</span></div>`;
+    return `<div class="dashboard-schedule-list">${orderedGroups.map(({ league, matches: leagueMatches }) => {
+      const rows = [...leagueMatches].sort((a, b) => new Date(a?.date || 0) - new Date(b?.date || 0));
+      return `<section class="dashboard-schedule-league">
+        <div class="dashboard-schedule-league-head">${leagueLogo(league)}<strong>${escapeHtml(league?.name || "Соревнование")}</strong><span>${countLabel(rows.length, "матч", "матча", "матчей")}</span></div>
+        <div class="dashboard-schedule-rows">${rows.map((match) => {
+          const live = liveStatuses.has(match?.status?.short);
+          const status = matchStatusLabel(match);
+          const result = showMatchScore(match) ? `${match?.goals?.home ?? "—"} : ${match?.goals?.away ?? "—"}` : "—";
+          return `<button class="dashboard-schedule-row${live ? " is-live" : ""}" type="button" data-dashboard-fixture="${escapeHtml(match?.fixtureId || "")}">
+            <time>${escapeHtml(status)}</time>
+            <span class="dashboard-schedule-team">${dashboardTeamMark(match?.home)}<b>${escapeHtml(match?.home?.name || "—")}</b></span>
+            <strong class="dashboard-schedule-score">${escapeHtml(result)}</strong>
+            <span class="dashboard-schedule-team is-away">${dashboardTeamMark(match?.away)}<b>${escapeHtml(match?.away?.name || "—")}</b></span>
+          </button>`;
+        }).join("")}</div>
+      </section>`;
+    }).join("")}</div>`;
+  }
+
   function dashboardSignals(match) {
     const hasScore = match?.goals?.home !== null && match?.goals?.home !== undefined
       || match?.goals?.away !== null && match?.goals?.away !== undefined;
@@ -3086,13 +3209,13 @@
 
   function renderDashboardShell() {
     elements.dashboardScreen.innerHTML = `
-      <section class="dashboard-hero"><div class="screen-kicker">AlmazStat · сегодня</div><h1>Главное в футболе</h1><p id="dashboard-date">Матчи, которые стоит увидеть сегодня.</p><div class="dashboard-actions"><a class="dashboard-cta" data-route="/matches" href="/matches">Открыть все матчи</a><a class="dashboard-cta secondary" data-route="/leagues" href="/leagues">Топ-лиги</a></div></section>
-      <section class="dashboard-section" data-dashboard-block="live"><div class="dashboard-section-head"><div><small>ПРЯМО СЕЙЧАС</small><h2>Идёт игра</h2></div><a data-route="/matches" href="/matches">Матч-центр</a></div></section>
-      <section class="dashboard-section" data-dashboard-block="main"><div class="dashboard-section-head"><div><small>ГЛАВНЫЕ МАТЧИ</small><h2>Сегодня</h2></div></div></section>
-      <section class="dashboard-section" data-dashboard-block="upcoming"><div class="dashboard-section-head"><div><small>ДАЛЬШЕ</small><h2>Предстоящие</h2></div></div></section>
-      <section class="dashboard-section" data-dashboard-block="recent"><div class="dashboard-section-head"><div><small>РЕЗУЛЬТАТЫ</small><h2>Недавние</h2></div></div></section>
-      <section class="dashboard-section" data-dashboard-block="leagues"><div class="dashboard-section-head"><div><small>ПРИОРИТЕТ</small><h2>Топ-лиги</h2></div><a data-route="/leagues" href="/leagues">Все лиги</a></div></section>
-      <section class="dashboard-section" data-dashboard-block="all"><div class="dashboard-section-head"><div><small>ПОЛНАЯ ЛЕНТА</small><h2>Все матчи сегодня</h2></div><a data-route="/matches" href="/matches">Матч-центр</a></div></section>`;
+      <section class="dashboard-intro"><div><h1>Футбол сегодня</h1><p id="dashboard-date">Расписание игрового дня</p></div><a data-route="/matches" href="/matches">Все матчи</a></section>
+      <div class="dashboard-stage">
+        <section class="dashboard-feature" data-dashboard-block="feature">${dashboardState("Загрузка матча дня", "Выбираем главный матч сегодняшнего расписания…")}</section>
+        <section class="dashboard-next"><div class="dashboard-panel-head"><h2>Следом</h2><a data-route="/matches" href="/matches">Полная лента</a></div><div data-dashboard-block="next">${dashboardState("Загрузка матчей", "Собираем ближайшие важные игры…")}</div></section>
+      </div>
+      <section class="dashboard-live-band"><span class="dashboard-live-label"><i></i>LIVE</span><div data-dashboard-block="live">${dashboardState("Проверяем эфир", "Получаем текущие статусы матчей…")}</div></section>
+      <section class="dashboard-schedule"><div class="dashboard-panel-head"><div><h2>Расписание матчей</h2><p>Сегодня · по соревнованиям</p></div><a data-route="/matches" href="/matches">Открыть матч-центр</a></div><div data-dashboard-block="schedule">${dashboardState("Загрузка расписания", "Получаем все матчи игрового дня…")}</div></section>`;
   }
 
   async function loadDashboard(forceMatches = false) {
@@ -3100,9 +3223,9 @@
     const retryMatchesOnly = forceMatches;
     if (!retryMatchesOnly) {
       renderDashboardShell();
-      ["live", "main", "upcoming", "recent", "leagues", "all"].forEach((kind) => renderDashboardBlock(kind, dashboardState("Загрузка матчей", "Получаем сегодняшние матчи…")));
+      ["feature", "next", "live", "schedule"].forEach((kind) => renderDashboardBlock(kind, dashboardState("Загрузка матчей", "Получаем сегодняшние матчи…")));
     } else if (retryMatchesOnly) {
-      ["live", "main", "upcoming", "recent", "leagues", "all"].forEach((kind) => renderDashboardBlock(kind, dashboardState("Загрузка матчей", "Повторяем запрос сегодняшних матчей…")));
+      ["feature", "next", "live", "schedule"].forEach((kind) => renderDashboardBlock(kind, dashboardState("Загрузка матчей", "Повторяем запрос сегодняшних матчей…")));
     }
     const todayDate = dateForOffset(0);
     const fetchMatches = () => {
@@ -3119,21 +3242,21 @@
       const matches = Array.isArray(payload?.matches) ? payload.matches : [];
       const ordered = sortByCompetitionPriority(matches);
       const live = sortByCompetitionPriority(matches.filter((item) => liveStatuses.has(item?.status?.short)));
-      const upcoming = sortByCompetitionPriority(matches.filter((item) => upcomingStatuses.has(item?.status?.short)));
-      const recent = sortByCompetitionPriority(matches.filter((item) => finishedStatuses.has(item?.status?.short)));
-      const ranked = ordered;
-      const leagueNames = [...new Map(ranked.map((item) => [String(item?.league?.id ?? item?.league?.name), item?.league])).values()].filter((league) => league?.id !== null && league?.id !== undefined).slice(0, 6);
-      const block = (items, empty, limit = 6) => items.length ? `<div class="dashboard-fixtures">${(limit === null ? items : items.slice(0, limit)).map((item) => dashboardFixtureButton(item)).join("")}</div>` : `<div class="dashboard-empty"><strong>${empty}</strong></div>`;
-      renderDashboardBlock("live", block(live, "Сейчас матчей нет", null));
-      renderDashboardBlock("main", block(ranked.filter((item) => !liveStatuses.has(item?.status?.short)).slice(0, 6), "Матчей на сегодня нет"));
-      renderDashboardBlock("upcoming", block(upcoming, "Предстоящих матчей нет"));
-      renderDashboardBlock("recent", block(recent, "Завершённых матчей нет"));
-      renderDashboardBlock("all", block(ordered, "Матчей на сегодня нет"));
-      renderDashboardBlock("leagues", leagueNames.length ? `<div class="dashboard-league-strip">${leagueNames.map((league) => `<a data-route="/league/${encodeURIComponent(league?.id || "")}" href="/league/${encodeURIComponent(league?.id || "")}">${leagueLogo(league)}<span>${escapeHtml(league?.name || "Соревнование")}</span></a>`).join("")}</div>` : `<div class="dashboard-empty"><strong>Лиги не найдены</strong></div>`);
+      const featured = dashboardSelectFeatured(ordered);
+      const next = [...ordered]
+        .filter((match) => match !== featured)
+        .sort((a, b) => dashboardMatchWeight(b) - dashboardMatchWeight(a) || new Date(a?.date || 0).getTime() - new Date(b?.date || 0).getTime())
+        .slice(0, 3);
+      const dashboardDate = document.getElementById("dashboard-date");
+      if (dashboardDate) dashboardDate.textContent = formatMatchDay(todayDate);
+      renderDashboardBlock("feature", dashboardFeaturedFixture(featured));
+      renderDashboardBlock("next", dashboardNextMatches(next));
+      renderDashboardBlock("live", dashboardLiveBand(live));
+      renderDashboardBlock("schedule", dashboardSchedule(ordered));
       setDataStatus("live");
     }).catch((error) => {
       if (sequence !== dashboardRouteSequence) return;
-      ["live", "main", "upcoming", "recent", "leagues", "all"].forEach((kind) => renderDashboardBlock(kind, dashboardState("Матчи недоступны", error.message || "Проверьте соединение.", true, "matches")));
+      ["feature", "next", "live", "schedule"].forEach((kind) => renderDashboardBlock(kind, dashboardState("Матчи недоступны", error.message || "Проверьте соединение.", true, "matches")));
       setDataStatus("error");
     });
   }
