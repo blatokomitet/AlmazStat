@@ -1,11 +1,8 @@
 name: Sportmonks Standings migration
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - .github/scripts/migrate-sportmonks-standings.mjs
-      - .github/workflows/migrate-sportmonks-standings.yml
+  # The migration is complete. Keep this workflow manual-only so an ordinary
+  # source change cannot rewrite production code after CI has passed.
   workflow_dispatch:
 
 permissions:

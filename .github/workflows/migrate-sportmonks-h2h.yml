@@ -1,11 +1,8 @@
 name: Sportmonks H2H migration
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - .github/workflows/migrate-sportmonks-h2h.yml
+  # The migration is complete. Keep this workflow manual-only so an ordinary
+  # source change cannot rewrite production code after CI has passed.
   workflow_dispatch:
 
 permissions:
