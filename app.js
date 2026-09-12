@@ -225,6 +225,19 @@
       .replaceAll("'", "&#039;");
   }
 
+  function assetUrl(value) {
+    if (!value) return "";
+    try {
+      const url = new URL(String(value), window.location.origin);
+      if (url.hostname === "cdn.sportmonks.com" && url.pathname.startsWith("/images/")) {
+        return `/api/media?url=${encodeURIComponent(url.href)}`;
+      }
+      return url.href;
+    } catch {
+      return String(value);
+    }
+  }
+
   function setDataStatus(state) {
     const labels = {
       loading: t("loading"),
@@ -665,7 +678,7 @@
 
   function renderStatisticTeam(team) {
     const logo = team?.logo
-      ? `<img src="${escapeHtml(team.logo)}" alt="" loading="lazy" />`
+      ? `<img src="${escapeHtml(assetUrl(team.logo))}" alt="" loading="lazy" />`
       : `<span class="statistics-team-placeholder" aria-hidden="true">◇</span>`;
     return `
       <div class="statistics-team">
@@ -904,7 +917,7 @@
   function renderTeamLineup(lineup, side) {
     if (!lineup) return "";
     const logo = lineup.team?.logo
-      ? `<img src="${escapeHtml(lineup.team.logo)}" alt="" loading="lazy" />`
+      ? `<img src="${escapeHtml(assetUrl(lineup.team.logo))}" alt="" loading="lazy" />`
       : `<span class="lineup-logo-placeholder" aria-hidden="true">◇</span>`;
     const coach =
       lineup.coach?.name || lineup.coach?.photo
@@ -914,7 +927,7 @@
             <div class="lineup-coach-card">
               ${
                 lineup.coach?.photo
-                  ? `<img src="${escapeHtml(lineup.coach.photo)}" alt="" loading="lazy" />`
+                  ? `<img src="${escapeHtml(assetUrl(lineup.coach.photo))}" alt="" loading="lazy" />`
                   : ""
               }
               ${lineup.coach?.name ? `<strong>${escapeHtml(lineup.coach.name)}</strong>` : ""}
@@ -1166,7 +1179,7 @@
       return `<span class="team-logo-placeholder" aria-hidden="true">◇</span>`;
     }
 
-    return `<img src="${escapeHtml(team.logo)}" alt="${escapeHtml(
+    return `<img src="${escapeHtml(assetUrl(team.logo))}" alt="${escapeHtml(
       team.name ? `Логотип ${team.name}` : "Логотип команды",
     )}" loading="lazy" />`;
   }
@@ -1185,7 +1198,7 @@
     if (!league?.logo) {
       return `<span class="league-group-logo-placeholder" aria-hidden="true">◇</span>`;
     }
-    return `<img class="league-group-logo" src="${escapeHtml(league.logo)}" alt="" loading="lazy" />`;
+    return `<img class="league-group-logo" src="${escapeHtml(assetUrl(league.logo))}" alt="" loading="lazy" />`;
   }
 
   function matchStatusLabel(match) {
@@ -1524,7 +1537,7 @@
 
   function dataLogo(url, alt, className = "data-logo") {
     if (!url) return `<span class="${className}-placeholder" aria-hidden="true">◇</span>`;
-    return `<img class="${className}" src="${escapeHtml(url)}" alt="${escapeHtml(
+    return `<img class="${className}" src="${escapeHtml(assetUrl(url))}" alt="${escapeHtml(
       alt || "",
     )}" loading="lazy" />`;
   }
@@ -1699,7 +1712,7 @@
                   ${dataLogo(league.logo, league.name, "data-logo")}
                   <div>
                     <strong>${escapeHtml(league.name || "Нет данных")}</strong>
-                    <span>${league.country?.flag ? `<img class="country-flag" src="${escapeHtml(league.country.flag)}" alt="" />` : ""}${escapeHtml(league.country?.name || league.type || "Нет данных")}</span>
+                    <span>${league.country?.flag ? `<img class="country-flag" src="${escapeHtml(assetUrl(league.country.flag))}" alt="" />` : ""}${escapeHtml(league.country?.name || league.type || "Нет данных")}</span>
                   </div>
                 </div>
                 <div class="data-card-foot"><span>${escapeHtml(league.type || "Соревнование")}</span><span>${escapeHtml((league.seasons || []).find((s) => s.current)?.year || (league.seasons || [])[0]?.year || "—")} →</span></div>
@@ -2085,7 +2098,7 @@
           : `<strong class="news-card-title">${escapeHtml(item.title)}</strong>`
         : "";
       return `<article class="news-card">
-        ${item.image ? `<img class="news-card-image" src="${escapeHtml(item.image)}" alt="" loading="lazy" />` : ""}
+        ${item.image ? `<img class="news-card-image" src="${escapeHtml(assetUrl(item.image))}" alt="" loading="lazy" />` : ""}
         <div class="news-card-body">
           ${item.category || item.publishedAt ? `<div class="news-card-top">${item.category ? `<span>${escapeHtml(item.category)}</span>` : ""}${item.publishedAt ? `<time>${escapeHtml(formatDate(item.publishedAt, true))}</time>` : ""}</div>` : ""}
           ${titleHtml}
@@ -2144,7 +2157,7 @@
     const item = payload?.article;
     if (!item) return dataState("Эта публикация не найдена.");
     return `<a class="back-link" data-route="/news" href="/news">← Все новости</a><article class="news-detail">
-      ${item.image ? `<img class="news-detail-image" src="${escapeHtml(item.image)}" alt="" />` : ""}
+      ${item.image ? `<img class="news-detail-image" src="${escapeHtml(assetUrl(item.image))}" alt="" />` : ""}
       ${item.category || item.publishedAt ? `<div class="news-card-top">${item.category ? `<span>${escapeHtml(item.category)}</span>` : ""}${item.publishedAt ? `<time>${escapeHtml(formatDate(item.publishedAt, false))}</time>` : ""}</div>` : ""}
       ${item.title ? `<h1>${escapeHtml(item.title)}</h1>` : ""}
       ${item.source ? `<div class="news-detail-source">${escapeHtml(item.source)}</div>` : ""}
@@ -2514,7 +2527,7 @@
       ? `<label class="season-select">Сезон<select data-league-season>${seasons.map((season) => `<option value="${escapeHtml(season.year)}" ${String(season.year) === String(leagueStage3.season) ? "selected" : ""}>${escapeHtml(season.year)}${season.current ? " · текущий" : ""}</option>`).join("")}</select></label>`
       : `<div class="season-current"><span>Сезон</span><strong>${escapeHtml(seasons[0]?.year || "Недоступен")}</strong></div>`;
     renderDataPage(shellRoutes["/leagues"], `<a class="back-link data-back-link" data-route="/leagues" href="/leagues">← Все лиги</a>
-      <article class="league-hero"><div class="league-hero-main">${dataLogo(league.logo, league.name, "data-logo league-hero-logo")}<div><h1>${escapeHtml(league.name || "—")}</h1><p>${league.country?.flag ? `<img class="country-flag" src="${escapeHtml(league.country.flag)}" alt="" />` : ""}${escapeHtml(league.country?.name || "—")} · ${escapeHtml(league.type || "—")}</p></div></div>
+      <article class="league-hero"><div class="league-hero-main">${dataLogo(league.logo, league.name, "data-logo league-hero-logo")}<div><h1>${escapeHtml(league.name || "—")}</h1><p>${league.country?.flag ? `<img class="country-flag" src="${escapeHtml(assetUrl(league.country.flag))}" alt="" />` : ""}${escapeHtml(league.country?.name || "—")} · ${escapeHtml(league.type || "—")}</p></div></div>
       ${seasonControl}</article>
       <div class="tabs league-tabs" role="tablist" aria-label="Разделы лиги">${leagueTabs.map((tab) => `<button id="league-tab-${tab}" class="tab ${tab === leagueStage3.tab ? "active" : ""}" type="button" role="tab" aria-selected="${tab === leagueStage3.tab}" aria-controls="league-panel" tabindex="${tab === leagueStage3.tab ? "0" : "-1"}" data-league-tab="${tab}">${leagueTabLabels[tab]}</button>`).join("")}</div>
       <div id="league-panel" class="league-panel" role="tabpanel" aria-labelledby="league-tab-${leagueStage3.tab}"></div>`);
@@ -2662,7 +2675,7 @@
     return `<div class="team-state ${kind}"><strong>${kind === "error" ? "Ошибка данных" : kind === "loading" ? "Загрузка" : "Нет данных"}</strong><span>${escapeHtml(message)}</span>${kind === "error" && retryKey ? `<button class="retry-button" data-team-retry="${escapeHtml(retryKey)}">Повторить</button>` : ""}</div>`;
   }
   function teamLogo(url, name, className = "team-detail-logo") {
-    return url ? `<img class="${className}" src="${escapeHtml(url)}" alt="${escapeHtml(name || "")}" loading="lazy">` : `<span class="${className} team-logo-placeholder" aria-hidden="true">◇</span>`;
+    return url ? `<img class="${className}" src="${escapeHtml(assetUrl(url))}" alt="${escapeHtml(name || "")}" loading="lazy">` : `<span class="${className} team-logo-placeholder" aria-hidden="true">◇</span>`;
   }
   function teamFixtureLink(fixture, teamId) {
     const home = fixture.home || {}, away = fixture.away || {}, score = fixture.goals || {};
@@ -3060,7 +3073,7 @@
     if (!team?.logo) {
       return `<span class="dashboard-team-mark dashboard-team-mark-placeholder ${escapeHtml(className)}" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5 20 8v8l-8 4.5L4 16V8Z"/><path d="m8.5 10 3.5-2 3.5 2v4L12 16l-3.5-2Z"/></svg></span>`;
     }
-    return `<img class="dashboard-team-mark ${escapeHtml(className)}" src="${escapeHtml(team.logo)}" alt="" loading="lazy" />`;
+    return `<img class="dashboard-team-mark ${escapeHtml(className)}" src="${escapeHtml(assetUrl(team.logo))}" alt="" loading="lazy" />`;
   }
 
   function dashboardMatchWeight(match) {
@@ -3245,7 +3258,7 @@
       <section class="dashboard-intro"><div><h1>${dashboardDayTitle()}</h1><p id="dashboard-date">Расписание игрового дня</p></div><div class="dashboard-intro-tools"><a class="dashboard-search-link" data-route="/matches" href="/matches"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 5 5"></path></svg><span>Поиск команд, лиг, матчей…</span></a><div class="dashboard-intro-meta"><span id="dashboard-match-count">Получаем матчи</span><a data-route="/matches" href="/matches">Все матчи</a></div></div></section>
       <div class="dashboard-date-switcher" role="group" aria-label="День матчей">${[-1, 0, 1].map((offset) => `<button class="${dashboardDayOffset === offset ? "active" : ""}" type="button" data-dashboard-day="${offset}" aria-pressed="${dashboardDayOffset === offset}">${dashboardDayLabel(offset)}</button>`).join("")}</div>
       <div class="dashboard-stage">
-        <section class="dashboard-live-panel"><div class="dashboard-panel-head"><h2><span class="dashboard-live-dot"></span>LIVE сейчас</h2><a data-route="/matches" href="/matches">Все LIVE</a></div><div data-dashboard-block="live">${dashboardState("Проверяем эфир", "Получаем текущие статусы матчей…")}</div></section>
+        <section class="dashboard-live-panel"><div class="dashboard-panel-head"><h2><span class="dashboard-live-dot"></span>LIVE сейчас</h2><a data-route="/matches" href="/matches?filter=live">Все LIVE</a></div><div data-dashboard-block="live">${dashboardState("Проверяем эфир", "Получаем текущие статусы матчей…")}</div></section>
         <section class="dashboard-feature" data-dashboard-block="feature">${dashboardState("Загрузка матча дня", "Выбираем главный матч сегодняшнего расписания…")}</section>
         <section class="dashboard-next"><div class="dashboard-panel-head"><h2>Матчи сегодня</h2><a data-route="/matches" href="/matches">Все</a></div>${dashboardFilterControls()}<div data-dashboard-block="next">${dashboardState("Загрузка матчей", "Собираем ближайшие важные игры…")}</div></section>
       </div>
@@ -3356,12 +3369,19 @@
       loadDashboard();
     } else if (route.kind === "match-center") {
       dashboardRouteSequence += 1;
+      const requestedFilter = new URLSearchParams(window.location.search).get("filter");
+      if (validFilters.has(requestedFilter)) selectedFilter = requestedFilter;
       elements.dashboardScreen.hidden = true;
       elements.dataScreen.hidden = true;
       elements.analysisScreen.hidden = true;
       elements.matchesScreen.hidden = false;
       document.title = `AlmazStat — ${route.title}`;
       if (!matchCenterInitialized) loadMatches(selectedDate);
+      else {
+        saveMatchCenterState();
+        updateMatchCenterControls();
+        renderCurrentMatches();
+      }
     } else {
       if (routePath === "/statistics") loadStatisticsRoute();
       else loadDataRoute(routePath);

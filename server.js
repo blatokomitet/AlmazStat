@@ -2737,6 +2737,24 @@ app.get(
   },
 );
 
+app.get("/api/media", async (request, response) => {
+  try {
+    const source = new URL(String(request.query.url || ""));
+    if (source.protocol !== "https:" || source.hostname !== "cdn.sportmonks.com" || !source.pathname.startsWith("/images/")) {
+      return response.status(400).json({ error: { code: "INVALID_MEDIA_URL", message: "Недопустимый адрес изображения." } });
+    }
+
+    const upstream = await fetch(source, { signal: AbortSignal.timeout(10_000) });
+    if (!upstream.ok) return response.status(upstream.status).end();
+
+    response.set("Content-Type", upstream.headers.get("content-type") || "image/png");
+    response.set("Cache-Control", "public, max-age=86400, stale-while-revalidate=604800");
+    return response.send(Buffer.from(await upstream.arrayBuffer()));
+  } catch {
+    return response.status(502).json({ error: { code: "MEDIA_UNAVAILABLE", message: "Изображение временно недоступно." } });
+  }
+});
+
 app.use(express.static(currentDirectory));
 
 app.use((request, response, next) => {
