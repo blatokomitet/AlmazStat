@@ -2019,6 +2019,15 @@ async function collectAiMatchFacts(fixtureId) {
     score: row?.score ?? null,
     result: row?.result ?? null,
   }));
+  const compactLineup = (side) => (centre?.lineups?.[side]?.starters || []).slice(0, 11).map((player) => ({
+    player: player?.playerName ?? null,
+    positionId: player?.positionId ?? null,
+    formationPosition: player?.formationPosition ?? null,
+    metrics: (player?.details || []).slice(0, 8).map((detail) => ({
+      type: detail?.type?.name ?? detail?.type?.developerName ?? null,
+      value: detail?.value ?? null,
+    })).filter((detail) => detail.type && detail.value !== null),
+  }));
 
   return {
     fixture: {
@@ -2033,14 +2042,30 @@ async function collectAiMatchFacts(fixtureId) {
     recentForm: { home: compactMatches(form?.home), away: compactMatches(form?.away) },
     headToHead: compactMatches(h2h),
     standings: { home: standing(centre.home.id), away: standing(centre.away.id) },
+    expectedGoals: (centre.expectedGoals || []).map((row) => ({
+      team: Number(row.teamId) === Number(centre.home.id) ? centre.home.name : Number(row.teamId) === Number(centre.away.id) ? centre.away.name : row.teamId,
+      type: row?.type?.name ?? row?.type?.developerName ?? null,
+      value: row.value,
+    })),
     statistics: (statistics.rows || []).slice(0, 30).map((row) => ({ type: row.type, home: row.home, away: row.away })),
-    lineups: { homeStarters: centre.lineups?.home?.starters?.length || 0, awayStarters: centre.lineups?.away?.starters?.length || 0 },
+    events: (centre.events || []).slice(0, 30).map((event) => ({
+      minute: event.minute,
+      extraMinute: event.extraMinute,
+      type: event?.type?.name ?? event?.type?.developerName ?? null,
+      teamId: event.teamId,
+      player: event?.player?.name ?? null,
+      result: event.result,
+    })),
+    lineups: { home: compactLineup("home"), away: compactLineup("away") },
     odds: odds.slice(0, 24).map((row) => ({ bookmaker: row.bookmaker, market: row.market, option: row.option, odd: row.odd })),
     availability: {
       form: Boolean(form?.home?.length || form?.away?.length),
       headToHead: h2h.length > 0,
       standings: table.length > 0,
       statistics: statistics.rows.length > 0,
+      expectedGoals: Boolean(centre.expectedGoals?.length),
+      events: Boolean(centre.events?.length),
+      lineups: Boolean(centre.lineups?.home?.starters?.length || centre.lineups?.away?.starters?.length),
       odds: odds.length > 0,
     },
   };

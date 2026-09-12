@@ -199,3 +199,27 @@ test("oddsByFixture returns only 1X2 and total-goals markets", async () => {
   ]);
   assert.equal(result.meta.provider, "sportmonks");
 });
+
+test("fixtureById requests and maps xG plus detailed lineups for AI analysis", async () => {
+  const originalFetch = globalThis.fetch;
+  let requestedUrl = "";
+  globalThis.fetch = async (url) => {
+    requestedUrl = String(url);
+    return new Response(JSON.stringify({ data: {
+      ...fixture(19732704, "2026-09-12 16:00:00", 1, 0),
+      xGFixture: [{ id: 1, participant_id: 10, data: { value: 1.42 }, type: { id: 5304, name: "Expected Goals", developer_name: "EXPECTED_GOALS" } }],
+      lineups: [{ id: 2, team_id: 10, player_id: 99, player: { display_name: "Test Player" }, type: { developer_name: "LINEUP" }, details: [{ data: { value: 0.31 }, type: { name: "Player xG" } }] }],
+    } }), { status: 200, headers: { "content-type": "application/json" } });
+  };
+  try {
+    const provider = createSportmonksProvider({ token: "test-token", baseUrl: "https://sportmonks.test/v3/football" });
+    const result = await provider.fixtureById(19732704, { deep: true });
+    const include = new URL(requestedUrl).searchParams.get("include");
+    assert.match(include, /xGFixture\.type/);
+    assert.match(include, /lineups\.details\.type/);
+    assert.equal(result.fixture.expectedGoals[0].value, 1.42);
+    assert.equal(result.fixture.lineups.home.starters[0].details[0].value, 0.31);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
