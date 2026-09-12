@@ -5252,3 +5252,205 @@ body {
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Theme controls and light control-room variant */
+.theme-toggle {
+  display: inline-flex;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+  transition: background-color 160ms ease-out, border-color 160ms ease-out, color 160ms ease-out;
+}
+
+.theme-toggle:hover {
+  border-color: rgba(34, 201, 120, 0.38);
+  background: rgba(34, 201, 120, 0.1);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+.theme-toggle-wide {
+  width: 100%;
+  justify-content: flex-start;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.theme-toggle-compact {
+  flex: 0 0 44px;
+  padding: 0;
+}
+
+.theme-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+html[data-theme="dark"] .theme-icon-moon,
+html[data-theme="light"] .theme-icon-sun {
+  display: none;
+}
+
+html[data-theme="light"] {
+  --bg: #f3f6f4;
+  --surface: #ffffff;
+  --surface-2: #edf2ef;
+  --line: rgba(25, 50, 39, 0.14);
+  --text: #142019;
+  --muted: #65736c;
+  --blue: #0d9d5b;
+  --violet: #0d9d5b;
+  --green: #0d9d5b;
+  --red: #c43e4b;
+  --gold: #0d9d5b;
+  color-scheme: light;
+}
+
+html[data-theme="light"],
+html[data-theme="light"] body {
+  background-color: #f3f6f4;
+}
+
+html[data-theme="light"] body {
+  background:
+    radial-gradient(circle at 14% 0%, rgba(13, 157, 91, 0.08), transparent 29%),
+    radial-gradient(circle at 96% 100%, rgba(13, 157, 91, 0.05), transparent 32%),
+    #f3f6f4;
+}
+
+html[data-theme="light"] ::selection {
+  background: rgba(13, 157, 91, 0.22);
+  color: #102219;
+}
+
+html[data-theme="light"] * {
+  scrollbar-color: rgba(13, 157, 91, 0.45) #e2e9e5;
+}
+
+html[data-theme="light"] .site-shell {
+  border-color: rgba(25, 50, 39, 0.13);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 26px 80px rgba(28, 55, 42, 0.12);
+}
+
+html[data-theme="light"] .desktop-sidebar {
+  background: rgba(247, 250, 248, 0.98);
+}
+
+html[data-theme="light"] .header,
+html[data-theme="light"] .dashboard-feature,
+html[data-theme="light"] .dashboard-next,
+html[data-theme="light"] .dashboard-live-panel,
+html[data-theme="light"] .dashboard-schedule,
+html[data-theme="light"] .dashboard-live-band {
+  background: rgba(255, 255, 255, 0.97);
+}
+
+html[data-theme="light"] .dashboard-intro {
+  background: rgba(248, 251, 249, 0.98);
+}
+
+html[data-theme="light"] .sidebar-sport,
+html[data-theme="light"] .dashboard-search-link,
+html[data-theme="light"] .dashboard-date-switcher button,
+html[data-theme="light"] .language-switch,
+html[data-theme="light"] .theme-toggle,
+html[data-theme="light"] .bottom {
+  background: #edf2ef;
+}
+
+html[data-theme="light"] .dashboard-date-switcher,
+html[data-theme="light"] .bottom {
+  background: rgba(255, 255, 255, 0.97);
+}
+
+html[data-theme="light"] .dashboard-schedule-league-head {
+  background: #e8eeea;
+}
+
+html[data-theme="light"] .image-placeholder,
+html[data-theme="light"] .data-logo,
+html[data-theme="light"] .data-logo-placeholder,
+html[data-theme="light"] .crest,
+html[data-theme="light"] .player-meta-grid div,
+html[data-theme="light"] .player-stat-grid div,
+html[data-theme="light"] .ai-market-signals > div,
+html[data-theme="light"] .dashboard-fixture,
+html[data-theme="light"] .dashboard-analysis-card,
+html[data-theme="light"] .dashboard-nav-grid a {
+  background: rgba(25, 50, 39, 0.045);
+}
+
+html[data-theme="light"] .crest {
+  border-color: var(--line);
+}
+
+html[data-theme="light"] .language-option {
+  color: #5f6d66;
+}
+
+html[data-theme="light"] .language-option.active {
+  background: #ffffff;
+  color: #087c47;
+  box-shadow: 0 1px 4px rgba(28, 55, 42, 0.09);
+}
+
+html[data-theme="light"] .sidebar-nav a,
+html[data-theme="light"] .sidebar-shortcuts > a,
+html[data-theme="light"] .sidebar-label,
+html[data-theme="light"] .sidebar-footer small,
+html[data-theme="light"] .brand-sub,
+html[data-theme="light"] .dashboard-intro p,
+html[data-theme="light"] .dashboard-intro-meta > span,
+html[data-theme="light"] .dashboard-featured-top > span,
+html[data-theme="light"] .dashboard-featured-team > small,
+html[data-theme="light"] .dashboard-featured-centre > i,
+html[data-theme="light"] .dashboard-live-copy span,
+html[data-theme="light"] .dashboard-live-match small,
+html[data-theme="light"] .dashboard-panel-head p,
+html[data-theme="light"] .ai-analysis-card > p,
+html[data-theme="light"] .ai-analysis-group ul,
+html[data-theme="light"] .ai-market-signals span,
+html[data-theme="light"] .ai-analysis-card footer {
+  color: var(--muted);
+}
+
+html[data-theme="light"] .sidebar-sport,
+html[data-theme="light"] .sidebar-nav a:hover,
+html[data-theme="light"] .sidebar-nav a.active {
+  color: var(--text);
+}
+
+html[data-theme="light"] .league-table tr.is-selected td {
+  background: rgba(13, 157, 91, 0.1);
+}
+
+html[data-theme="light"] .match-card,
+html[data-theme="light"] .dashboard-hero,
+html[data-theme="light"] .team-hero,
+html[data-theme="light"] .player-hero {
+  box-shadow: 0 18px 48px rgba(28, 55, 42, 0.09);
+}
+
+@media (max-width: 460px) {
+  .header #data-status-text {
+    display: none;
+  }
+}

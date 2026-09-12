@@ -74,7 +74,29 @@
   const ruToEn = new Map(phrasePairs);
   const enToRu = new Map(phrasePairs.map(([ru, en]) => [en, ru]));
   let uiLanguage = localStorage.getItem("almazstat.language") === "en" ? "en" : "ru";
+  let uiTheme = document.documentElement.dataset.theme === "light" ? "light" : "dark";
   function t(key) { return languageCopy[uiLanguage]?.[key] || languageCopy.ru[key] || key; }
+  function applyTheme() {
+    const light = uiTheme === "light";
+    document.documentElement.dataset.theme = uiTheme;
+    document.documentElement.style.colorScheme = uiTheme;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", light ? "#f3f6f4" : "#0d1014");
+    const targetLabel = uiLanguage === "en"
+      ? (light ? "Dark theme" : "Light theme")
+      : (light ? "Тёмная тема" : "Светлая тема");
+    const actionLabel = uiLanguage === "en"
+      ? `Switch to ${light ? "dark" : "light"} theme`
+      : `Переключить на ${light ? "тёмную" : "светлую"} тему`;
+    document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
+      button.setAttribute("aria-pressed", light ? "true" : "false");
+      button.setAttribute("aria-label", actionLabel);
+      button.querySelectorAll("[data-theme-label]").forEach((label) => { label.textContent = targetLabel; });
+    });
+    if (telegram) {
+      telegram.setHeaderColor?.(light ? "#f3f6f4" : "#0d1014");
+      telegram.setBackgroundColor?.(light ? "#f3f6f4" : "#0d1014");
+    }
+  }
   function translatePhrase(value) {
     const source = String(value ?? "");
     const trimmed = source.trim();
@@ -115,8 +137,16 @@
     translateTree(document.body);
     if (window.__almazstatRefreshLanguage) window.__almazstatRefreshLanguage();
     document.title = document.title.split(" — ").map(translatePhrase).join(" — ");
+    applyTheme();
   }
   document.addEventListener("click", (event) => {
+    const themeButton = event.target.closest?.("[data-theme-toggle]");
+    if (themeButton) {
+      uiTheme = uiTheme === "light" ? "dark" : "light";
+      localStorage.setItem("almazstat.theme", uiTheme);
+      applyTheme();
+      return;
+    }
     const button = event.target.closest?.("[data-language]");
     if (!button) return;
     uiLanguage = button.dataset.language === "en" ? "en" : "ru";
