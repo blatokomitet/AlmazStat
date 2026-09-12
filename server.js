@@ -13,6 +13,10 @@ const sportmonksProvider = createSportmonksProvider({ token: sportmonksToken });
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 const dataCache = new Map();
 const apiFootballInflight = new Map();
+const mediaCache = new Map();
+const mediaInflight = new Map();
+const mediaCacheTtlMs = 24 * 60 * 60 * 1000;
+const mediaCacheMaxEntries = 500;
 
 if (!Number.isInteger(port) || port <= 0) {
   throw new Error("PORT environment variable must contain a valid port number.");
@@ -2496,13 +2500,55 @@ app.get("/api/media", async (request, response) => {
       return response.status(400).json({ error: { code: "INVALID_MEDIA_URL", message: "Недопустимый адрес изображения." } });
     }
 
-    const upstream = await fetch(source, { signal: AbortSignal.timeout(10_000) });
-    if (!upstream.ok) return response.status(upstream.status).end();
+    const cacheKey = source.href;
+    const cached = mediaCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      response.set("Content-Type", cached.contentType);
+      response.set("Cache-Control", "public, max-age=86400, stale-while-revalidate=604800");
+      response.set("X-AlmazStat-Media", "HIT");
+      return response.send(cached.buffer);
+    }
+    if (cached) mediaCache.delete(cacheKey);
 
-    response.set("Content-Type", upstream.headers.get("content-type") || "image/png");
+    let pending = mediaInflight.get(cacheKey);
+    if (!pending) {
+      pending = (async () => {
+        const upstream = await fetch(source, {
+          signal: AbortSignal.timeout(30_000),
+          headers: {
+            Accept: "image/avif,image/webp,image/png,image/*,*/*;q=0.8",
+            "User-Agent": "AlmazStat/1.0 media proxy",
+          },
+        });
+        if (!upstream.ok) {
+          const error = new Error(`Sportmonks CDN returned HTTP ${upstream.status}.`);
+          error.status = upstream.status;
+          throw error;
+        }
+
+        const item = {
+          buffer: Buffer.from(await upstream.arrayBuffer()),
+          contentType: upstream.headers.get("content-type") || "image/png",
+          expiresAt: Date.now() + mediaCacheTtlMs,
+        };
+        if (mediaCache.size >= mediaCacheMaxEntries) {
+          mediaCache.delete(mediaCache.keys().next().value);
+        }
+        mediaCache.set(cacheKey, item);
+        return item;
+      })().finally(() => mediaInflight.delete(cacheKey));
+      mediaInflight.set(cacheKey, pending);
+    }
+
+    const media = await pending;
+
+    response.set("Content-Type", media.contentType);
     response.set("Cache-Control", "public, max-age=86400, stale-while-revalidate=604800");
-    return response.send(Buffer.from(await upstream.arrayBuffer()));
-  } catch {
+    response.set("X-AlmazStat-Media", "MISS");
+    return response.send(media.buffer);
+  } catch (error) {
+    console.error("Sportmonks media request failed:", error?.message || error);
+    if (Number.isInteger(error?.status)) return response.status(error.status).end();
     return response.status(502).json({ error: { code: "MEDIA_UNAVAILABLE", message: "Изображение временно недоступно." } });
   }
 });
