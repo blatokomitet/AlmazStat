@@ -176,6 +176,7 @@
     shellNav: Array.from(document.querySelectorAll("[data-shell-nav]")),
     dataStatus: document.getElementById("data-status"),
     dataStatusText: document.getElementById("data-status-text"),
+    sidebarDataStatus: document.getElementById("sidebar-data-status"),
     leagueLink: document.getElementById("league-link"),
     leagueName: document.getElementById("league-name"),
     homeTeamLink: document.getElementById("home-team-link"),
@@ -232,6 +233,7 @@
     };
     elements.dataStatus.dataset.state = state;
     elements.dataStatusText.textContent = labels[state];
+    if (elements.sidebarDataStatus) elements.sidebarDataStatus.dataset.state = state;
   }
 
   function formatDate(value, compact) {
@@ -3016,11 +3018,25 @@
     matches: null,
     matchesDate: null,
     matchesInflight: null,
+    matchesInflightDate: null,
   };
+  let dashboardDayOffset = 0;
+  let dashboardMatchFilter = "all";
+
+  function dashboardDayLabel(offset) {
+    const value = dateForOffset(offset);
+    const date = new Date(`${value}T12:00:00`);
+    const day = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "short" }).format(date);
+    return `${offset === -1 ? "Вчера" : offset === 1 ? "Завтра" : "Сегодня"}<small>${day}</small>`;
+  }
+
+  function dashboardDayTitle() {
+    return dashboardDayOffset === -1 ? "Футбол вчера" : dashboardDayOffset === 1 ? "Футбол завтра" : "Футбол сегодня";
+  }
   let dashboardRouteSequence = 0;
 
   function dashboardState(title, copy, error = false, retry = "") {
-    return `<div class="dashboard-state${error ? " is-error" : ""}">
+    return `<div class="dashboard-state${error ? " is-error" : ""}" role="status" aria-live="polite">
       <strong>${escapeHtml(title)}</strong><span>${escapeHtml(copy)}</span>
       ${retry ? `<button class="retry-button" type="button" data-dashboard-retry="${retry}">Повторить</button>` : ""}
     </div>`;
@@ -3042,7 +3058,7 @@
 
   function dashboardTeamMark(team, className = "") {
     if (!team?.logo) {
-      return `<span class="dashboard-team-mark ${escapeHtml(className)}" aria-hidden="true">◇</span>`;
+      return `<span class="dashboard-team-mark dashboard-team-mark-placeholder ${escapeHtml(className)}" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5 20 8v8l-8 4.5L4 16V8Z"/><path d="m8.5 10 3.5-2 3.5 2v4L12 16l-3.5-2Z"/></svg></span>`;
     }
     return `<img class="dashboard-team-mark ${escapeHtml(className)}" src="${escapeHtml(team.logo)}" alt="" loading="lazy" />`;
   }
@@ -3123,15 +3139,32 @@
     }).join("")}</div>`;
   }
 
+  function dashboardFilteredMatches(matches) {
+    if (dashboardMatchFilter === "live") return matches.filter((match) => liveStatuses.has(match?.status?.short));
+    if (dashboardMatchFilter === "finished") return matches.filter((match) => finishedStatuses.has(match?.status?.short));
+    if (dashboardMatchFilter === "upcoming") return matches.filter((match) => upcomingStatuses.has(match?.status?.short));
+    return matches;
+  }
+
+  function dashboardFilterControls() {
+    const filters = [
+      ["all", "Все"],
+      ["live", "LIVE"],
+      ["finished", "Результаты"],
+      ["upcoming", "Скоро"],
+    ];
+    return `<div class="dashboard-match-filters" role="group" aria-label="Фильтр матчей">${filters.map(([value, label]) => `<button class="${dashboardMatchFilter === value ? "active" : ""}" type="button" data-dashboard-filter="${value}" aria-pressed="${dashboardMatchFilter === value}">${label}</button>`).join("")}</div>`;
+  }
+
   function dashboardLiveBand(matches) {
     if (!matches.length) {
-      return `<div class="dashboard-live-copy"><strong>Сейчас матчей нет</strong><span>Здесь появятся счёт и статус после стартового свистка.</span></div><a data-route="/matches" href="/matches">Матч-центр</a>`;
+      return `<div class="dashboard-live-copy"><strong>Сейчас матчей нет</strong><span>Счёт и статус появятся после стартового свистка.</span></div>`;
     }
-    const first = matches[0];
-    return `<button class="dashboard-live-match" type="button" data-dashboard-fixture="${escapeHtml(first?.fixtureId || "")}">
-      <strong>${escapeHtml(first?.home?.name || "—")} <span>${escapeHtml(first?.goals?.home ?? "—")} : ${escapeHtml(first?.goals?.away ?? "—")}</span> ${escapeHtml(first?.away?.name || "—")}</strong>
-      <small>${escapeHtml(matchStatusLabel(first))}${matches.length > 1 ? ` · ещё ${matches.length - 1}` : ""}</small>
-    </button><a data-route="/matches" href="/matches">Все LIVE</a>`;
+    return `<div class="dashboard-live-list">${matches.slice(0, 6).map((match) => `<button class="dashboard-live-match" type="button" data-dashboard-fixture="${escapeHtml(match?.fixtureId || "")}">
+      <span class="dashboard-live-minute">${escapeHtml(matchStatusLabel(match))}</span>
+      <span class="dashboard-live-teams"><b>${escapeHtml(match?.home?.name || "—")}</b><b>${escapeHtml(match?.away?.name || "—")}</b></span>
+      <strong>${escapeHtml(match?.goals?.home ?? "—")} : ${escapeHtml(match?.goals?.away ?? "—")}</strong>
+    </button>`).join("")}</div>`;
   }
 
   function dashboardSchedule(matches) {
@@ -3209,12 +3242,13 @@
 
   function renderDashboardShell() {
     elements.dashboardScreen.innerHTML = `
-      <section class="dashboard-intro"><div><h1>Футбол сегодня</h1><p id="dashboard-date">Расписание игрового дня</p></div><a data-route="/matches" href="/matches">Все матчи</a></section>
+      <section class="dashboard-intro"><div><h1>${dashboardDayTitle()}</h1><p id="dashboard-date">Расписание игрового дня</p></div><div class="dashboard-intro-tools"><a class="dashboard-search-link" data-route="/matches" href="/matches"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 5 5"></path></svg><span>Поиск команд, лиг, матчей…</span></a><div class="dashboard-intro-meta"><span id="dashboard-match-count">Получаем матчи</span><a data-route="/matches" href="/matches">Все матчи</a></div></div></section>
+      <div class="dashboard-date-switcher" role="group" aria-label="День матчей">${[-1, 0, 1].map((offset) => `<button class="${dashboardDayOffset === offset ? "active" : ""}" type="button" data-dashboard-day="${offset}" aria-pressed="${dashboardDayOffset === offset}">${dashboardDayLabel(offset)}</button>`).join("")}</div>
       <div class="dashboard-stage">
+        <section class="dashboard-live-panel"><div class="dashboard-panel-head"><h2><span class="dashboard-live-dot"></span>LIVE сейчас</h2><a data-route="/matches" href="/matches">Все LIVE</a></div><div data-dashboard-block="live">${dashboardState("Проверяем эфир", "Получаем текущие статусы матчей…")}</div></section>
         <section class="dashboard-feature" data-dashboard-block="feature">${dashboardState("Загрузка матча дня", "Выбираем главный матч сегодняшнего расписания…")}</section>
-        <section class="dashboard-next"><div class="dashboard-panel-head"><h2>Следом</h2><a data-route="/matches" href="/matches">Полная лента</a></div><div data-dashboard-block="next">${dashboardState("Загрузка матчей", "Собираем ближайшие важные игры…")}</div></section>
+        <section class="dashboard-next"><div class="dashboard-panel-head"><h2>Матчи сегодня</h2><a data-route="/matches" href="/matches">Все</a></div>${dashboardFilterControls()}<div data-dashboard-block="next">${dashboardState("Загрузка матчей", "Собираем ближайшие важные игры…")}</div></section>
       </div>
-      <section class="dashboard-live-band"><span class="dashboard-live-label"><i></i>LIVE</span><div data-dashboard-block="live">${dashboardState("Проверяем эфир", "Получаем текущие статусы матчей…")}</div></section>
       <section class="dashboard-schedule"><div class="dashboard-panel-head"><div><h2>Расписание матчей</h2><p>Сегодня · по соревнованиям</p></div><a data-route="/matches" href="/matches">Открыть матч-центр</a></div><div data-dashboard-block="schedule">${dashboardState("Загрузка расписания", "Получаем все матчи игрового дня…")}</div></section>`;
   }
 
@@ -3227,14 +3261,26 @@
     } else if (retryMatchesOnly) {
       ["feature", "next", "live", "schedule"].forEach((kind) => renderDashboardBlock(kind, dashboardState("Загрузка матчей", "Повторяем запрос сегодняшних матчей…")));
     }
-    const todayDate = dateForOffset(0);
+    const dashboardDateValue = dateForOffset(dashboardDayOffset);
     const fetchMatches = () => {
-      if (!forceMatches && dashboardData.matches && dashboardData.matchesDate === todayDate) return Promise.resolve(dashboardData.matches);
-      if (!dashboardData.matchesInflight) dashboardData.matchesInflight = fetchDataJson(`/api/matches?date=${encodeURIComponent(todayDate)}`).then((payload) => {
-        dashboardData.matches = payload;
-        dashboardData.matchesDate = todayDate;
-        return payload;
-      }).finally(() => { dashboardData.matchesInflight = null; });
+      if (!forceMatches && dashboardData.matches && dashboardData.matchesDate === dashboardDateValue) return Promise.resolve(dashboardData.matches);
+      if (!dashboardData.matchesInflight || dashboardData.matchesInflightDate !== dashboardDateValue) {
+        dashboardData.matchesInflightDate = dashboardDateValue;
+        const requestDate = dashboardDateValue;
+        const request = fetchDataJson(`/api/matches?date=${encodeURIComponent(requestDate)}`).then((payload) => {
+          if (dashboardData.matchesInflight === request) {
+            dashboardData.matches = payload;
+            dashboardData.matchesDate = requestDate;
+          }
+          return payload;
+        }).finally(() => {
+          if (dashboardData.matchesInflight === request) {
+            dashboardData.matchesInflight = null;
+            dashboardData.matchesInflightDate = null;
+          }
+        });
+        dashboardData.matchesInflight = request;
+      }
       return dashboardData.matchesInflight;
     };
     fetchMatches().then((payload) => {
@@ -3243,12 +3289,14 @@
       const ordered = sortByCompetitionPriority(matches);
       const live = sortByCompetitionPriority(matches.filter((item) => liveStatuses.has(item?.status?.short)));
       const featured = dashboardSelectFeatured(ordered);
-      const next = [...ordered]
-        .filter((match) => match !== featured)
+      const nextPool = dashboardFilteredMatches(ordered.filter((match) => match !== featured));
+      const next = [...nextPool]
         .sort((a, b) => dashboardMatchWeight(b) - dashboardMatchWeight(a) || new Date(a?.date || 0).getTime() - new Date(b?.date || 0).getTime())
-        .slice(0, 3);
+        .slice(0, 6);
       const dashboardDate = document.getElementById("dashboard-date");
-      if (dashboardDate) dashboardDate.textContent = formatMatchDay(todayDate);
+      if (dashboardDate) dashboardDate.textContent = formatMatchDay(dashboardDateValue);
+      const dashboardMatchCount = document.getElementById("dashboard-match-count");
+      if (dashboardMatchCount) dashboardMatchCount.textContent = countLabel(matches.length, "матч", "матча", "матчей");
       renderDashboardBlock("feature", dashboardFeaturedFixture(featured));
       renderDashboardBlock("next", dashboardNextMatches(next));
       renderDashboardBlock("live", dashboardLiveBand(live));
@@ -3321,6 +3369,10 @@
   }
 
   function setupShellRouting() {
+    const scrollToPageTop = () => window.scrollTo({
+      top: 0,
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+    });
     if (fixtureId) {
       const basePath = applicationBasePath();
       if (basePath) {
@@ -3349,7 +3401,7 @@
         `${applicationBasePath()}${nextPath}${nextUrl.search}`,
       );
       renderShellRoute();
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      scrollToPageTop();
     });
 
     elements.dataContent.addEventListener("submit", (event) => {
@@ -3363,10 +3415,22 @@
       const target = `${applicationBasePath()}${form.dataset.dataForm}${values.toString() ? `?${values}` : ""}`;
       window.history.pushState({}, "", target);
       renderShellRoute();
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      scrollToPageTop();
     });
 
     elements.dashboardScreen.addEventListener("click", (event) => {
+      const dayButton = event.target.closest("[data-dashboard-day]");
+      if (dayButton) {
+        dashboardDayOffset = Number(dayButton.dataset.dashboardDay);
+        loadDashboard(false);
+        return;
+      }
+      const filterButton = event.target.closest("[data-dashboard-filter]");
+      if (filterButton) {
+        dashboardMatchFilter = filterButton.dataset.dashboardFilter || "all";
+        loadDashboard(false);
+        return;
+      }
       const fixtureButton = event.target.closest("[data-dashboard-fixture]");
       if (fixtureButton?.dataset.dashboardFixture) {
         window.location.href = `${applicationBasePath()}/?fixture=${encodeURIComponent(fixtureButton.dataset.dashboardFixture)}`;

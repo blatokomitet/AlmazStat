@@ -1,212 +1,182 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-12T01:38:56Z",
+  "generatedAt": "2026-09-12T00:00:00Z",
   "title": "Design System: AlmazStat",
   "extensions": {
     "colorMeta": {
-      "night-canvas": {
+      "graphite-canvas": {
         "role": "neutral",
-        "displayName": "Night Canvas",
-        "canonical": "#0b0e12",
-        "tonalRamp": ["oklch(15% 0.010 255.7)", "oklch(26% 0.010 255.7)", "oklch(38% 0.010 255.7)", "oklch(50% 0.010 255.7)", "oklch(62% 0.010 255.7)", "oklch(74% 0.010 255.7)", "oklch(86% 0.010 255.7)", "oklch(95% 0.010 255.7)"]
+        "displayName": "Graphite Canvas",
+        "canonical": "#0d1014",
+        "tonalRamp": ["oklch(15% 0.01 255)", "oklch(26% 0.01 255)", "oklch(38% 0.01 255)", "oklch(50% 0.01 255)", "oklch(62% 0.01 255)", "oklch(74% 0.01 255)", "oklch(86% 0.01 255)", "oklch(95% 0.01 255)"]
       },
-      "base-surface": {
+      "outer-canvas": {
         "role": "neutral",
-        "displayName": "Base Surface",
-        "canonical": "#12171c",
-        "tonalRamp": ["oklch(15% 0.013 248.5)", "oklch(26% 0.013 248.5)", "oklch(38% 0.013 248.5)", "oklch(50% 0.013 248.5)", "oklch(62% 0.013 248.5)", "oklch(74% 0.013 248.5)", "oklch(86% 0.013 248.5)", "oklch(95% 0.013 248.5)"]
+        "displayName": "Outer Canvas",
+        "canonical": "#090b0e",
+        "tonalRamp": ["oklch(15% 0.008 255)", "oklch(26% 0.008 255)", "oklch(38% 0.008 255)", "oklch(50% 0.008 255)", "oklch(62% 0.008 255)", "oklch(74% 0.008 255)", "oklch(86% 0.008 255)", "oklch(95% 0.008 255)"]
+      },
+      "panel-surface": {
+        "role": "neutral",
+        "displayName": "Panel Surface",
+        "canonical": "#151920",
+        "tonalRamp": ["oklch(15% 0.015 255)", "oklch(26% 0.015 255)", "oklch(38% 0.015 255)", "oklch(50% 0.015 255)", "oklch(62% 0.015 255)", "oklch(74% 0.015 255)", "oklch(86% 0.015 255)", "oklch(95% 0.015 255)"]
       },
       "raised-surface": {
         "role": "neutral",
         "displayName": "Raised Surface",
-        "canonical": "#192027",
-        "tonalRamp": ["oklch(15% 0.017 248.5)", "oklch(26% 0.017 248.5)", "oklch(38% 0.017 248.5)", "oklch(50% 0.017 248.5)", "oklch(62% 0.017 248.5)", "oklch(74% 0.017 248.5)", "oklch(86% 0.017 248.5)", "oklch(95% 0.017 248.5)"]
+        "canonical": "#1c212a",
+        "tonalRamp": ["oklch(15% 0.018 255)", "oklch(26% 0.018 255)", "oklch(38% 0.018 255)", "oklch(50% 0.018 255)", "oklch(62% 0.018 255)", "oklch(74% 0.018 255)", "oklch(86% 0.018 255)", "oklch(95% 0.018 255)"]
       },
-      "feature-surface": {
+      "league-surface": {
         "role": "neutral",
-        "displayName": "Feature Surface",
-        "canonical": "#11161b",
-        "tonalRamp": ["oklch(15% 0.013 248.5)", "oklch(26% 0.013 248.5)", "oklch(38% 0.013 248.5)", "oklch(50% 0.013 248.5)", "oklch(62% 0.013 248.5)", "oklch(74% 0.013 248.5)", "oklch(86% 0.013 248.5)", "oklch(95% 0.013 248.5)"]
-      },
-      "live-surface": {
-        "role": "neutral",
-        "displayName": "Live Surface",
-        "canonical": "#101b18",
-        "tonalRamp": ["oklch(15% 0.017 175.8)", "oklch(26% 0.017 175.8)", "oklch(38% 0.017 175.8)", "oklch(50% 0.017 175.8)", "oklch(62% 0.017 175.8)", "oklch(74% 0.017 175.8)", "oklch(86% 0.017 175.8)", "oklch(95% 0.017 175.8)"]
+        "displayName": "League Surface",
+        "canonical": "#20252e",
+        "tonalRamp": ["oklch(15% 0.018 255)", "oklch(26% 0.018 255)", "oklch(38% 0.018 255)", "oklch(50% 0.018 255)", "oklch(62% 0.018 255)", "oklch(74% 0.018 255)", "oklch(86% 0.018 255)", "oklch(95% 0.018 255)"]
       },
       "primary-text": {
         "role": "neutral",
         "displayName": "Primary Text",
-        "canonical": "#edf2ed",
-        "tonalRamp": ["oklch(15% 0.008 145.5)", "oklch(26% 0.008 145.5)", "oklch(38% 0.008 145.5)", "oklch(50% 0.008 145.5)", "oklch(62% 0.008 145.5)", "oklch(74% 0.008 145.5)", "oklch(86% 0.008 145.5)", "oklch(95% 0.008 145.5)"]
+        "canonical": "#f2f5fb",
+        "tonalRamp": ["oklch(15% 0.01 255)", "oklch(26% 0.01 255)", "oklch(38% 0.01 255)", "oklch(50% 0.01 255)", "oklch(62% 0.01 255)", "oklch(74% 0.01 255)", "oklch(86% 0.01 255)", "oklch(95% 0.01 255)"]
       },
       "muted-text": {
         "role": "neutral",
         "displayName": "Muted Text",
-        "canonical": "#8e9a98",
-        "tonalRamp": ["oklch(15% 0.014 184.9)", "oklch(26% 0.014 184.9)", "oklch(38% 0.014 184.9)", "oklch(50% 0.014 184.9)", "oklch(62% 0.014 184.9)", "oklch(74% 0.014 184.9)", "oklch(86% 0.014 184.9)", "oklch(95% 0.014 184.9)"]
+        "canonical": "#87909f",
+        "tonalRamp": ["oklch(15% 0.02 255)", "oklch(26% 0.02 255)", "oklch(38% 0.02 255)", "oklch(50% 0.02 255)", "oklch(62% 0.02 255)", "oklch(74% 0.02 255)", "oklch(86% 0.02 255)", "oklch(95% 0.02 255)"]
       },
-      "focus-sage": {
-        "role": "secondary",
-        "displayName": "Focus Sage",
-        "canonical": "#93b8aa",
-        "tonalRamp": ["oklch(15% 0.045 170)", "oklch(26% 0.045 170)", "oklch(38% 0.045 170)", "oklch(50% 0.045 170)", "oklch(62% 0.045 170)", "oklch(74% 0.045 170)", "oklch(86% 0.045 170)", "oklch(95% 0.045 170)"]
-      },
-      "matchday-gold": {
+      "primary-green": {
         "role": "primary",
-        "displayName": "Matchday Gold",
-        "canonical": "#c7a66a",
-        "tonalRamp": ["oklch(15% 0.087 81.7)", "oklch(26% 0.087 81.7)", "oklch(38% 0.087 81.7)", "oklch(50% 0.087 81.7)", "oklch(62% 0.087 81.7)", "oklch(74% 0.087 81.7)", "oklch(86% 0.087 81.7)", "oklch(95% 0.087 81.7)"]
+        "displayName": "Signal Green",
+        "canonical": "#22c978",
+        "tonalRamp": ["oklch(15% 0.15 156)", "oklch(26% 0.15 156)", "oklch(38% 0.15 156)", "oklch(50% 0.15 156)", "oklch(62% 0.15 156)", "oklch(74% 0.15 156)", "oklch(86% 0.15 156)", "oklch(95% 0.15 156)"]
       },
-      "brand-indigo-light": {
-        "role": "secondary",
-        "displayName": "Brand Indigo Light",
-        "canonical": "#8898ff",
-        "tonalRamp": ["oklch(15% 0.151 275.2)", "oklch(26% 0.151 275.2)", "oklch(38% 0.151 275.2)", "oklch(50% 0.151 275.2)", "oklch(62% 0.151 275.2)", "oklch(74% 0.151 275.2)", "oklch(86% 0.151 275.2)", "oklch(95% 0.151 275.2)"]
+      "live-green-soft": {
+        "role": "primary",
+        "displayName": "Live Green Soft",
+        "canonical": "#a9f3cc",
+        "tonalRamp": ["oklch(15% 0.09 156)", "oklch(26% 0.09 156)", "oklch(38% 0.09 156)", "oklch(50% 0.09 156)", "oklch(62% 0.09 156)", "oklch(74% 0.09 156)", "oklch(86% 0.09 156)", "oklch(95% 0.09 156)"]
       },
-      "brand-indigo-deep": {
+      "error-red": {
         "role": "secondary",
-        "displayName": "Brand Indigo Deep",
-        "canonical": "#5147b8",
-        "tonalRamp": ["oklch(15% 0.172 281.6)", "oklch(26% 0.172 281.6)", "oklch(38% 0.172 281.6)", "oklch(50% 0.172 281.6)", "oklch(62% 0.172 281.6)", "oklch(74% 0.172 281.6)", "oklch(86% 0.172 281.6)", "oklch(95% 0.172 281.6)"]
-      },
-      "live-green": {
-        "role": "secondary",
-        "displayName": "Verified Live Green",
-        "canonical": "#86c8a4",
-        "tonalRamp": ["oklch(15% 0.085 159.7)", "oklch(26% 0.085 159.7)", "oklch(38% 0.085 159.7)", "oklch(50% 0.085 159.7)", "oklch(62% 0.085 159.7)", "oklch(74% 0.085 159.7)", "oklch(86% 0.085 159.7)", "oklch(95% 0.085 159.7)"]
-      },
-      "error-coral": {
-        "role": "secondary",
-        "displayName": "Error Coral",
-        "canonical": "#e8897d",
-        "tonalRamp": ["oklch(15% 0.118 28)", "oklch(26% 0.118 28)", "oklch(38% 0.118 28)", "oklch(50% 0.118 28)", "oklch(62% 0.118 28)", "oklch(74% 0.118 28)", "oklch(86% 0.118 28)", "oklch(95% 0.118 28)"]
+        "displayName": "Error Red",
+        "canonical": "#ef4e57",
+        "tonalRamp": ["oklch(15% 0.16 24)", "oklch(26% 0.16 24)", "oklch(38% 0.16 24)", "oklch(50% 0.16 24)", "oklch(62% 0.16 24)", "oklch(74% 0.16 24)", "oklch(86% 0.16 24)", "oklch(95% 0.16 24)"]
       },
       "hairline": {
         "role": "neutral",
-        "displayName": "Cool Hairline",
-        "canonical": "rgba(205, 220, 214, 0.12)",
-        "tonalRamp": ["oklch(15% 0.018 170 / 0.12)", "oklch(26% 0.018 170 / 0.12)", "oklch(38% 0.018 170 / 0.12)", "oklch(50% 0.018 170 / 0.12)", "oklch(62% 0.018 170 / 0.12)", "oklch(74% 0.018 170 / 0.12)", "oklch(86% 0.018 170 / 0.12)", "oklch(95% 0.018 170 / 0.12)"]
+        "displayName": "Cold Hairline",
+        "canonical": "rgba(224, 232, 255, 0.09)",
+        "tonalRamp": ["oklch(15% 0.018 255 / 0.09)", "oklch(26% 0.018 255 / 0.09)", "oklch(38% 0.018 255 / 0.09)", "oklch(50% 0.018 255 / 0.09)", "oklch(62% 0.018 255 / 0.09)", "oklch(74% 0.018 255 / 0.09)", "oklch(86% 0.018 255 / 0.09)", "oklch(95% 0.018 255 / 0.09)"]
       }
     },
     "typographyMeta": {
-      "display": { "displayName": "Match-Day Display", "purpose": "Homepage day headline only." },
-      "headline": { "displayName": "Panel Headline", "purpose": "Major panel and rail headings." },
-      "title": { "displayName": "Compact Title", "purpose": "Team names, navigation, and action links." },
-      "body": { "displayName": "Interface Body", "purpose": "Supporting copy and explanatory states." },
-      "label": { "displayName": "Scoreboard Label", "purpose": "Times, scores, badges, and compact live states." }
+      "display": { "displayName": "Control Room Display", "purpose": "Day heading and highest-level screen title." },
+      "headline": { "displayName": "Panel Headline", "purpose": "Compact dashboard section headings." },
+      "title": { "displayName": "Interface Title", "purpose": "Team names, navigation and actions." },
+      "body": { "displayName": "Interface Body", "purpose": "Supporting and state copy." },
+      "label": { "displayName": "Scoreboard Label", "purpose": "Times, scores, live minutes and operational metadata." }
     },
     "shadows": [
-      { "name": "legacy-card-ambient", "value": "0 25px 70px rgba(0, 0, 0, 0.35)", "purpose": "Established match-detail hero card only." },
-      { "name": "brand-mark-glow", "value": "0 10px 35px rgba(101, 119, 255, 0.22)", "purpose": "Preserved incumbent logo glow." },
-      { "name": "live-dot-shadow", "value": "0 2px 8px rgba(0, 0, 0, 0.45)", "purpose": "Separates the live dot from the dark live strip." }
+      { "name": "shell-ambient", "value": "0 26px 80px rgba(0, 0, 0, 0.38)", "purpose": "Separates the framed desktop shell from the outer canvas." },
+      { "name": "signal-glow", "value": "0 0 10px rgba(34, 201, 120, 0.35)", "purpose": "Small verified live dots only." }
     ],
     "motion": [
-      { "name": "data-card-hover", "value": "border-color 0.18s ease, transform 0.18s ease", "purpose": "Preserved incumbent lift response for data cards outside the flat homepage panels." },
-      { "name": "progress-fill", "value": "width 0.35s ease", "purpose": "Preserved incumbent value change for horizontal progress fills." }
+      { "name": "control-state", "value": "background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease", "purpose": "Quick hover and selection feedback for dense controls." }
     ],
     "breakpoints": [
-      { "name": "homepage-recompose", "value": "800px" },
-      { "name": "compact-header", "value": "390px" }
+      { "name": "shell-recompose", "value": "800px" },
+      { "name": "compact-mobile", "value": "390px" }
     ]
   },
   "components": [
     {
-      "name": "Editorial Action Link",
-      "kind": "button",
-      "refersTo": "action-link",
-      "description": "Gold text action for paths from homepage sections into full views.",
-      "html": "<a class=\"ds-action-link\" href=\"#\">Все матчи</a>",
-      "css": ".ds-action-link { display:inline-flex; min-height:44px; align-items:center; color:var(--gold, #c7a66a); font:800 12px/1.2 'DM Sans', sans-serif; text-decoration:underline; text-decoration-color:transparent; text-underline-offset:5px; transition:text-decoration-color .18s ease; } .ds-action-link:hover { text-decoration-color:currentColor; } .ds-action-link:focus-visible { outline:2px solid var(--gold, #c7a66a); outline-offset:3px; }"
+      "name": "Sidebar Active Item",
+      "kind": "nav",
+      "refersTo": "sidebar-item-active",
+      "description": "Active route in the sticky desktop navigation rail.",
+      "html": "<a class=\"ds-sidebar-item ds-is-active\" href=\"#\"><span class=\"ds-sidebar-rail\"></span><span>Главная</span></a>",
+      "css": ".ds-sidebar-item { position:relative; display:grid; grid-template-columns:20px minmax(0,1fr); align-items:center; min-height:41px; padding:0 11px; border-radius:7px; color:#929aa8; background:transparent; font:600 12px/1.2 Inter,sans-serif; text-decoration:none; } .ds-sidebar-item:hover,.ds-sidebar-item.ds-is-active { background:rgba(34,201,120,.1); color:#eef2fb; } .ds-sidebar-item.ds-is-active::before { position:absolute; top:10px; bottom:10px; left:0; width:2px; border-radius:2px; background:#22c978; content:''; } .ds-sidebar-item:focus-visible { outline:2px solid #22c978; outline-offset:2px; }"
+    },
+    {
+      "name": "Today Filter Chip",
+      "kind": "chip",
+      "description": "Compact filter used above the Today list.",
+      "html": "<button class=\"ds-filter-chip\" type=\"button\" aria-pressed=\"true\">Все</button>",
+      "css": ".ds-filter-chip { min-height:32px; padding:0 9px; border:1px solid rgba(34,201,120,.28); border-radius:6px; background:rgba(34,201,120,.12); color:#a9f3cc; cursor:pointer; font:700 10px/1.2 Inter,sans-serif; } .ds-filter-chip:hover { background:rgba(34,201,120,.18); } .ds-filter-chip:focus-visible { outline:2px solid #22c978; outline-offset:2px; }"
     },
     {
       "name": "Featured Match",
       "kind": "custom",
       "refersTo": "featured-match",
-      "description": "Dominant homepage choice with league, teams, kickoff or score, and verified state.",
-      "html": "<button class=\"ds-featured-match\" type=\"button\"><span class=\"ds-featured-top\"><b>Матч дня</b><span>Premier League</span></span><span class=\"ds-featured-body\"><span class=\"ds-featured-team\"><i>◇</i><strong>Арсенал</strong><small>1 место</small></span><span class=\"ds-featured-score\"><strong>20:45</strong><i>Начало матча</i></span><span class=\"ds-featured-team\"><i>◇</i><strong>Челси</strong><small>4 место</small></span></span></button>",
-      "css": ".ds-featured-match { display:block; width:100%; min-height:358px; padding:22px 24px 28px; border:1px solid var(--line, rgba(205,220,214,.12)); border-radius:16px; background:#11161b; color:var(--text, #edf2ed); cursor:pointer; text-align:left; } .ds-featured-top { display:flex; align-items:center; justify-content:space-between; gap:20px; padding-bottom:20px; border-bottom:1px solid var(--line, rgba(205,220,214,.12)); } .ds-featured-top b { padding:8px 11px; border-radius:8px; background:var(--gold, #c7a66a); color:#101317; font:700 11px/1.2 'Space Mono', monospace; letter-spacing:.04em; text-transform:uppercase; } .ds-featured-top span { overflow:hidden; color:#b8c1bd; font:700 12px/1.2 'DM Sans', sans-serif; text-overflow:ellipsis; white-space:nowrap; } .ds-featured-body { display:grid; grid-template-columns:minmax(0,1fr) minmax(110px,.55fr) minmax(0,1fr); align-items:center; gap:24px; min-height:280px; padding-top:20px; } .ds-featured-team, .ds-featured-score { display:grid; justify-items:center; gap:10px; min-width:0; text-align:center; } .ds-featured-team > i { display:grid; width:88px; height:88px; place-items:center; color:var(--muted, #8e9a98); font:normal 36px/1 sans-serif; } .ds-featured-team strong { overflow-wrap:anywhere; font:700 clamp(18px,2.2vw,27px)/1.05 'DM Sans', sans-serif; letter-spacing:-.025em; } .ds-featured-team small, .ds-featured-score i { color:#aab4b0; font:normal 11px/1.2 'DM Sans', sans-serif; } .ds-featured-score strong { font:700 clamp(29px,4vw,45px)/1 'Space Mono', monospace; font-variant-numeric:tabular-nums; letter-spacing:-.035em; white-space:nowrap; } .ds-featured-match:hover { background:linear-gradient(rgba(255,255,255,.035), rgba(255,255,255,.035)), #11161b; } .ds-featured-match:focus-visible { outline:2px solid var(--gold, #c7a66a); outline-offset:3px; }"
+      "description": "Central desktop anchor and second mobile block, populated only from match API data.",
+      "html": "<button class=\"ds-featured\" type=\"button\"><span class=\"ds-featured-top\"><b>Матч дня</b><span>Premier League</span></span><span class=\"ds-featured-body\"><span><i>◇</i><b>Арсенал</b></span><strong>20:45</strong><span><i>◇</i><b>Челси</b></span></span></button>",
+      "css": ".ds-featured { display:block; width:100%; min-height:326px; padding:18px 20px 20px; border:1px solid rgba(224,232,255,.09); border-radius:10px; background:#151920; color:#f2f5fb; cursor:pointer; } .ds-featured-top { display:flex; justify-content:space-between; gap:16px; padding-bottom:14px; border-bottom:1px solid rgba(224,232,255,.09); } .ds-featured-top b { padding:6px 9px; border-radius:5px; background:rgba(34,201,120,.15); color:#a9f3cc; font:700 10px/1.2 Inter,sans-serif; text-transform:uppercase; } .ds-featured-top span { color:#8993a2; font:600 11px/1.2 Inter,sans-serif; } .ds-featured-body { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:16px; min-height:250px; } .ds-featured-body span { display:grid; justify-items:center; gap:9px; } .ds-featured-body i { color:#87909f; font:normal 42px/1 sans-serif; } .ds-featured-body b { font:700 18px/1.05 Inter,sans-serif; } .ds-featured-body strong { font:700 36px/1 'Space Mono',monospace; font-variant-numeric:tabular-nums; } .ds-featured:hover { background:linear-gradient(rgba(34,201,120,.075),rgba(34,201,120,.075)),#151920; } .ds-featured:focus-visible { outline:2px solid #22c978; outline-offset:2px; }"
     },
     {
-      "name": "Next Match",
+      "name": "Live Match Row",
       "kind": "custom",
-      "description": "Compact supporting row in the three-match next queue.",
-      "html": "<button class=\"ds-next-match\" type=\"button\"><span class=\"ds-next-time\">18:30</span><span class=\"ds-next-teams\"><b>Милан</b><b>Интер</b></span><small>Serie A</small></button>",
-      "css": ".ds-next-match { display:grid; grid-template-columns:58px minmax(0,1fr); gap:5px 10px; width:100%; min-height:91px; padding:13px 2px; border:0; border-bottom:1px solid var(--line, rgba(205,220,214,.12)); background:transparent; color:var(--text, #edf2ed); cursor:pointer; text-align:left; } .ds-next-time { grid-row:1 / span 2; padding-top:3px; color:var(--gold, #c7a66a); font:700 13px/1.2 'Space Mono', monospace; font-variant-numeric:tabular-nums; } .ds-next-teams { display:grid; gap:6px; min-width:0; font:700 12px/1.2 'DM Sans', sans-serif; } .ds-next-match small { grid-column:2; overflow:hidden; color:#8f9a96; font:400 11px/1.2 'DM Sans', sans-serif; text-overflow:ellipsis; white-space:nowrap; } .ds-next-match:hover { background:rgba(255,255,255,.035); } .ds-next-match:focus-visible { outline:2px solid var(--gold, #c7a66a); outline-offset:3px; }"
-    },
-    {
-      "name": "Honest Live Strip",
-      "kind": "custom",
-      "refersTo": "live-strip",
-      "description": "Verified live summary or explicit no-live empty state.",
-      "html": "<section class=\"ds-live-strip\"><span class=\"ds-live-label\"><i></i>LIVE</span><div><strong>Сейчас матчей нет</strong><small>Здесь появятся счёт и статус после стартового свистка.</small></div></section>",
-      "css": ".ds-live-strip { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:24px; min-height:64px; padding:10px 18px; border:1px solid rgba(134,200,164,.28); border-radius:12px; background:#101b18; color:var(--text, #edf2ed); font-family:'DM Sans', sans-serif; } .ds-live-label { display:inline-flex; align-items:center; gap:9px; color:var(--green, #86c8a4); font:700 12px/1.2 'Space Mono', monospace; } .ds-live-label i { width:8px; height:8px; border-radius:50%; background:currentColor; box-shadow:0 2px 8px rgba(0,0,0,.45); } .ds-live-strip div { display:grid; gap:3px; } .ds-live-strip strong { font-size:12px; } .ds-live-strip small { color:#91a69d; font-size:11px; } .ds-live-strip:focus-within { outline:2px solid var(--gold, #c7a66a); outline-offset:3px; }"
+      "refersTo": "live-panel",
+      "description": "Verified live match row with minute, teams and current score.",
+      "html": "<button class=\"ds-live-row\" type=\"button\"><span class=\"ds-live-minute\">67′</span><span class=\"ds-live-teams\"><b>Команда 1</b><b>Команда 2</b></span><strong>2 : 1</strong></button>",
+      "css": ".ds-live-row { display:grid; grid-template-columns:42px minmax(0,1fr) auto; align-items:center; gap:9px; width:100%; min-height:53px; padding:7px 3px; border:0; border-bottom:1px solid rgba(224,232,255,.09); background:#151920; color:#f2f5fb; cursor:pointer; text-align:left; } .ds-live-minute { color:#22c978; font:700 10px/1.2 'Space Mono',monospace; } .ds-live-teams { display:grid; gap:4px; } .ds-live-teams b { overflow:hidden; font:700 10px/1.2 Inter,sans-serif; text-overflow:ellipsis; white-space:nowrap; } .ds-live-row strong { font:700 11px/1.2 'Space Mono',monospace; } .ds-live-row:hover { background:rgba(34,201,120,.075); } .ds-live-row:focus-visible { outline:2px solid #22c978; outline-offset:2px; }"
     },
     {
       "name": "Schedule Row",
       "kind": "custom",
       "refersTo": "schedule-row",
-      "description": "Dense league-grouped match row with stable time, teams, and score columns.",
+      "description": "Dense API-backed match row grouped below the first dashboard tier.",
       "html": "<button class=\"ds-schedule-row\" type=\"button\"><time>21:00</time><span>Реал Мадрид</span><strong>—</strong><span>Барселона</span></button>",
-      "css": ".ds-schedule-row { display:grid; grid-template-columns:72px minmax(0,1fr) 58px minmax(0,1fr); align-items:center; gap:12px; width:100%; min-height:48px; padding:7px 10px; border:0; border-bottom:1px solid var(--line, rgba(205,220,214,.12)); background:transparent; color:var(--text, #edf2ed); cursor:pointer; text-align:left; } .ds-schedule-row time, .ds-schedule-row strong { color:#b6c0bc; font:400 11px/1.2 'Space Mono', monospace; font-variant-numeric:tabular-nums; } .ds-schedule-row span { overflow:hidden; font:700 12px/1.2 'DM Sans', sans-serif; text-overflow:ellipsis; white-space:nowrap; } .ds-schedule-row strong { text-align:center; } .ds-schedule-row:hover { background:rgba(255,255,255,.035); } .ds-schedule-row:focus-visible { outline:2px solid var(--gold, #c7a66a); outline-offset:3px; }"
+      "css": ".ds-schedule-row { display:grid; grid-template-columns:72px minmax(0,1fr) 58px minmax(0,1fr); align-items:center; gap:12px; width:100%; min-height:45px; padding:7px 10px; border:0; border-bottom:1px solid rgba(224,232,255,.09); background:#151920; color:#f2f5fb; cursor:pointer; text-align:left; } .ds-schedule-row time,.ds-schedule-row strong { color:#aeb6c2; font:700 10px/1.2 'Space Mono',monospace; font-variant-numeric:tabular-nums; } .ds-schedule-row span { overflow:hidden; font:700 11px/1.2 Inter,sans-serif; text-overflow:ellipsis; white-space:nowrap; } .ds-schedule-row strong { text-align:center; } .ds-schedule-row:hover { background:rgba(34,201,120,.075); } .ds-schedule-row:focus-visible { outline:2px solid #22c978; outline-offset:2px; }"
     },
     {
-      "name": "Match Search Field",
-      "kind": "input",
-      "refersTo": "search-field",
-      "description": "Incumbent match-centre search field preserved alongside the homepage extension.",
-      "html": "<label class=\"ds-search\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"7\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"/><path d=\"m16 16 5 5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"/></svg><input type=\"search\" placeholder=\"Команда или лига\" /></label>",
-      "css": ".ds-search { position:relative; display:block; color:var(--muted, #8e9a98); } .ds-search svg { position:absolute; top:50%; left:16px; width:20px; height:20px; transform:translateY(-50%); pointer-events:none; } .ds-search input { width:100%; min-height:48px; padding:0 16px 0 44px; border:1px solid var(--line, rgba(205,220,214,.12)); border-radius:16px; outline:none; background:var(--surface, #12171c); color:var(--text, #edf2ed); font:400 14px/1.2 'DM Sans', sans-serif; } .ds-search input::placeholder { color:var(--muted, #8e9a98); } .ds-search input:focus { border-color:rgba(101,119,255,.45); box-shadow:0 0 0 3px rgba(101,119,255,.08); }"
+      "name": "Mobile Date Option",
+      "kind": "button",
+      "refersTo": "date-option-active",
+      "description": "Active date in the mobile-only yesterday/today/tomorrow switcher.",
+      "html": "<button class=\"ds-date-option\" type=\"button\" aria-pressed=\"true\">Сегодня<small>12 сен</small></button>",
+      "css": ".ds-date-option { display:grid; min-height:52px; place-content:center; gap:3px; padding:5px 8px; border:1px solid rgba(34,201,120,.48); border-radius:7px; background:rgba(34,201,120,.12); color:#67e6a8; cursor:pointer; font:700 11px/1.2 Inter,sans-serif; } .ds-date-option small { color:#9becbf; font:500 9px/1.2 Inter,sans-serif; } .ds-date-option:hover { background:rgba(34,201,120,.18); } .ds-date-option:focus-visible { outline:2px solid #22c978; outline-offset:2px; }"
     },
     {
-      "name": "Selected Match Filter",
-      "kind": "chip",
-      "refersTo": "filter-chip",
-      "description": "Selected state for the existing match-centre filter family.",
-      "html": "<button class=\"ds-filter-chip\" type=\"button\" aria-pressed=\"true\">Все</button>",
-      "css": ".ds-filter-chip { min-height:44px; padding:0 17px; border:1px solid rgba(101,119,255,.38); border-radius:13px; background:rgba(101,119,255,.15); color:var(--text, #edf2ed); cursor:pointer; font:700 12px/1.2 'DM Sans', sans-serif; white-space:nowrap; } .ds-filter-chip:hover { background:rgba(101,119,255,.2); } .ds-filter-chip:focus-visible { outline:2px solid var(--blue, #93b8aa); outline-offset:2px; }"
-    },
-    {
-      "name": "Desktop Navigation Link",
+      "name": "Mobile Bottom Navigation Item",
       "kind": "nav",
-      "description": "Muted header route that brightens and gains a gold rule when active.",
-      "html": "<a class=\"ds-nav-link ds-is-active\" href=\"#\">Главная</a>",
-      "css": ".ds-nav-link { position:relative; display:inline-flex; min-height:44px; align-items:center; color:#a7b1ad; font:700 12px/1.2 'DM Sans', sans-serif; text-decoration:none; } .ds-nav-link:hover, .ds-nav-link.ds-is-active { color:var(--text, #edf2ed); } .ds-nav-link.ds-is-active::after { position:absolute; right:0; bottom:0; left:0; height:2px; border-radius:2px; background:var(--gold, #c7a66a); content:''; } .ds-nav-link:focus-visible { outline:2px solid var(--gold, #c7a66a); outline-offset:3px; }"
+      "description": "Active item in the fixed safe-area-aware mobile bottom bar.",
+      "html": "<a class=\"ds-bottom-item ds-is-active\" href=\"#\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m4 11 8-7 8 7v9h-6v-6h-4v6H4Z\"/></svg><span>Главная</span></a>",
+      "css": ".ds-bottom-item { display:grid; min-height:48px; place-items:center; gap:4px; padding:8px; color:#87909f; font:600 10px/1.2 Inter,sans-serif; text-decoration:none; } .ds-bottom-item svg { width:22px; height:22px; fill:none; stroke:currentColor; stroke-linecap:round; stroke-linejoin:round; stroke-width:1.7; } .ds-bottom-item:hover,.ds-bottom-item.ds-is-active { color:#22c978; } .ds-bottom-item:focus-visible { outline:2px solid #22c978; outline-offset:2px; }"
     }
   ],
   "narrative": {
-    "northStar": "Ночной редакционный матч-дэй",
-    "overview": "AlmazStat is an established dark football-data system. Its homepage extends that incumbent identity with the hierarchy of a restrained sports broadcast: one decisive headline match, a compact queue of what follows, a truthful live signal, and a complete schedule beneath. The interface should feel informed and immediate, not theatrical or promotional.\n\nThis is an evolution of the existing product world rather than a new global visual identity. Dark tonal surfaces, compact data density, Russian-first labels, team marks, and numeric clarity remain foundational; the editorial hierarchy is strongest on the homepage and should not force every utility or detail screen into the same composition.",
+    "northStar": "Graphite Sports Control Room",
+    "overview": "AlmazStat выглядит как компактная операторская игрового дня: матовые графитовые панели, тонкие холодные разделители, плотная спортивная типографика и один уверенный зелёный сигнал. Экран должен ощущаться рабочим, быстрым и фактическим — без рекламной театральности и декоративной «аналитики».\n\nИерархия строится композицией и плотностью. На desktop три главные зоны видны одновременно, а устойчивый левый sidebar держит контекст навигации. На mobile оболочка исчезает, дата становится явным контролом, а порядок контента следует срочности: LIVE, главный матч, матчи сегодня, затем расписание.",
     "keyCharacteristics": [
-      "Dark, low-glare football surfaces with fine cool hairlines.",
-      "Muted gold for editorial priority and navigation emphasis.",
-      "Green reserved for verified live state and score information.",
-      "Oversized editorial introduction paired with compact tabular match data.",
-      "Calm, factual empty, loading, and error states with no invented content."
+      "Графитовая низкобликовая основа с холодными тонкими границами.",
+      "Единственный primary — яркий зелёный; gold и indigo не используются.",
+      "Плотные панели и компактные строки вместо больших декоративных карточек.",
+      "Inter для интерфейса и Space Mono для времени, счёта и live-статуса.",
+      "Только реальные API-данные и честные empty/loading/error-состояния."
     ],
     "rules": [
-      { "name": "The Verified Green Rule", "body": "Use live green only when the current match status is in the product's live-status set; an empty live strip remains factual and does not simulate activity.", "section": "colors" },
-      { "name": "The Warm Priority Rule", "body": "Gold expresses editorial importance or an active path. It is not a decorative wash and should not tint large surfaces.", "section": "colors" },
-      { "name": "The Numeric Instrument Rule", "body": "Render scores, kickoff times, and live labels in Space Mono with tabular numerals; prose and team names remain in DM Sans.", "section": "typography" },
-      { "name": "The Rank Before Scale Rule", "body": "Use the largest type for the day and the featured score, then step sharply down into compact match metadata.", "section": "typography" },
-      { "name": "The 800px Recomposition Rule", "body": "Do not merely shrink the desktop grid; below 800px, stack the stage and explicitly recompose dense schedule rows.", "section": "layout" },
-      { "name": "The Incumbent Measure Rule", "body": "The 1180px width belongs to the desktop shell and homepage canvas; existing focused screens keep their 760px content measure.", "section": "layout" },
-      { "name": "The Flat Broadcast Rule", "body": "Homepage information panels stay flat; hierarchy comes from composition, tonal surface changes, and typography rather than floating card shadows.", "section": "elevation" },
-      { "name": "The Quiet Corner Rule", "body": "Reserve large legacy radii for existing detail cards; the homepage's editorial panels use the tighter 16px silhouette.", "section": "shapes" }
+      { "name": "The One Signal Rule", "body": "Primary green is the only accent: do not revive gold or indigo for branding, priority, selection, or focus.", "section": "colors" },
+      { "name": "The Verified Live Rule", "body": "Green may label LIVE only when the API status belongs to the verified live-status set; otherwise show a factual empty or upcoming state.", "section": "colors" },
+      { "name": "The Numeric Instrument Rule", "body": "Use Space Mono with tabular numerals for kickoff times, scores and live minutes; team names and prose remain in Inter.", "section": "typography" },
+      { "name": "The Recomposition Rule", "body": "At 800px, change navigation and semantic order; do not merely shrink the desktop columns.", "section": "layout" },
+      { "name": "The First-Row Contract Rule", "body": "Desktop always presents Today matches / Featured / LIVE as peer operational zones, with schedule as the next tier.", "section": "layout" },
+      { "name": "The Flat Panel Rule", "body": "Information hierarchy comes from grid placement, tonal surfaces and typography; dashboard panels do not float independently.", "section": "elevation" }
     ],
     "dos": [
-      "Do preserve the incumbent dark palette, DM Sans/Space Mono pairing, team marks, and compact data density when extending the product.",
-      "Do keep the homepage order as featured choice, next queue, truthful live strip, and full league-grouped schedule.",
-      "Do use actual API-backed teams, competitions, times, statuses, and scores; provide calm empty or error copy when data is absent.",
-      "Do recompose at 800px and keep interactive targets at least 44px high.",
-      "Do make focus visible with the established gold homepage or sage incumbent outline."
+      "Do use the approved graphite sports control room composition and Signal Green as the sole primary accent.",
+      "Do keep desktop order as Today matches / Featured / LIVE, with schedule below.",
+      "Do keep mobile order as LIVE / Featured / Today, with the date switcher above and fixed bottom navigation below.",
+      "Do render teams, leagues, logos, times, statuses and scores only from the API, preserving honest loading, empty and error states.",
+      "Do make score, time and live status scannable with Space Mono and tabular numerals."
     ],
     "donts": [
-      "Don't promote the homepage composition into a mandatory template for match details, search, leagues, teams, or analytics.",
-      "Don't use live green for upcoming, selected, loading, or decorative states.",
-      "Don't invent editorial headlines, promotional claims, photos, metrics, or live activity that the source data does not provide.",
-      "Don't flatten the day into a wall of equal cards; editorial rank and full schedule serve different scanning needs.",
-      "Don't add floating shadows or saturated color washes to redesigned homepage panels; preserve the quiet tonal depth."
+      "Don't reintroduce gold, indigo, purple gradients or their glow treatments.",
+      "Don't use the old two-column featured/next layout for the dashboard's first tier.",
+      "Don't show fake standings, team-of-the-week modules, invented metrics, editorial headlines, photos, predictions or simulated live activity.",
+      "Don't keep the desktop sidebar visible on mobile or replace the fixed mobile bottom navigation with desktop controls.",
+      "Don't flatten the page into equal repeated cards; preserve the distinct roles of LIVE, Featured, Today and Schedule."
     ]
   }
 }
