@@ -167,6 +167,26 @@ test("leagueById maps current Sportmonks season IDs for downstream requests", as
   });
 });
 
+test("leagueById accepts Sportmonks lowercase currentseason relation", async () => {
+  const result = await withMockedResponse(
+    {
+      id: 8,
+      name: "Premier League",
+      currentseason: {
+        id: 28083,
+        name: "2026/2027",
+        is_current: true,
+        starting_at: "2026-08-01",
+      },
+    },
+    (provider) => provider.leagueById(8),
+  );
+
+  assert.equal(result.league.seasons.length, 1);
+  assert.equal(result.league.seasons[0].id, 28083);
+  assert.equal(result.league.seasons[0].current, true);
+});
+
 test("fixturesBySeason sends the Sportmonks season filter", async () => {
   const originalFetch = globalThis.fetch;
   let requestedUrl = "";
