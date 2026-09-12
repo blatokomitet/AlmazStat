@@ -1822,7 +1822,7 @@
               .map(
                 (season) => `
                   <div class="season-row">
-                    <strong>${escapeHtml(season.year)}</strong>
+                    <strong>${escapeHtml(season.name || season.year)}</strong>
                     <span>${escapeHtml(season.start || "Нет данных")} — ${escapeHtml(season.end || "Нет данных")}</span>
                     ${season.current ? '<em>текущий</em>' : ""}
                   </div>
@@ -2450,7 +2450,8 @@
   const leagueDate = (fixture) => new Date(fixture?.timestamp ? fixture.timestamp * 1000 : fixture?.date || 0);
   function leagueSeason(league) {
     const seasons = Array.isArray(league?.seasons) ? league.seasons : [];
-    return seasons.find((s) => s.current)?.year || seasons[0]?.year || "";
+    const selected = seasons.find((s) => s.current) || seasons[0];
+    return selected?.id || selected?.year || "";
   }
   function leagueState(message, kind = "loading", retry) {
     return dataState(message, kind, retry ? `league:${retry}` : "");
@@ -2538,8 +2539,8 @@
     leagueStage3.season = leagueStage3.season || leagueSeason(league);
     const seasons = league.seasons || [];
     const seasonControl = seasons.length > 1
-      ? `<label class="season-select">Сезон<select data-league-season>${seasons.map((season) => `<option value="${escapeHtml(season.year)}" ${String(season.year) === String(leagueStage3.season) ? "selected" : ""}>${escapeHtml(season.year)}${season.current ? " · текущий" : ""}</option>`).join("")}</select></label>`
-      : `<div class="season-current"><span>Сезон</span><strong>${escapeHtml(seasons[0]?.year || "Недоступен")}</strong></div>`;
+      ? `<label class="season-select">Сезон<select data-league-season>${seasons.map((season) => { const value = season.id || season.year; return `<option value="${escapeHtml(value)}" ${String(value) === String(leagueStage3.season) ? "selected" : ""}>${escapeHtml(season.name || season.year)}${season.current ? " · текущий" : ""}</option>`; }).join("")}</select></label>`
+      : `<div class="season-current"><span>Сезон</span><strong>${escapeHtml(seasons[0]?.name || seasons[0]?.year || "Недоступен")}</strong></div>`;
     renderDataPage(shellRoutes["/leagues"], `<a class="back-link data-back-link" data-route="/leagues" href="/leagues">← Все лиги</a>
       <article class="league-hero"><div class="league-hero-main">${dataLogo(league.logo, league.name, "data-logo league-hero-logo")}<div><h1>${escapeHtml(league.name || "—")}</h1><p>${league.country?.flag ? `<img class="country-flag" src="${escapeHtml(assetUrl(league.country.flag))}" alt="" />` : ""}${escapeHtml(league.country?.name || "—")} · ${escapeHtml(league.type || "—")}</p></div></div>
       ${seasonControl}</article>

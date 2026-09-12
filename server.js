@@ -987,40 +987,25 @@ app.get("/health", (_request, response) => {
 app.get("/api/leagues", async (request, response) => {
   const search = queryText(request.query.search);
   const country = queryText(request.query.country);
-  if (!requireApiKey(response)) return;
-
-  const counter = { count: 0 };
-  const cacheKey = `leagues:${search}:${country}`;
+  if (!sportmonksToken) return response.status(503).json({ error: { code: "SPORTMONKS_NOT_CONFIGURED", message: "Sportmonks не настроен." } });
+  const cacheKey = `sportmonks:leagues:${search}:${country}`;
   try {
     let result = cachedValue(cacheKey);
-    let rateLimit = null;
     if (result === undefined) {
-      const payload = await fetchApiFootballPayload(
-        "/leagues",
-        { search, country },
-        counter,
-      );
-      const leagues = payload.response
-        .map(normalizeLeague)
-        .filter((league) => league.id !== null);
-      result = { leagues: sortByName(leagues) };
-      rateLimit = payload.rateLimit;
-      setCachedValue(cacheKey, result, 6 * 60 * 60 * 1000);
+      result = search
+        ? await sportmonksProvider.leaguesSearch(search)
+        : await sportmonksProvider.leaguesByDate(serverDate());
+      const countryQuery = country.toLocaleLowerCase("ru-RU");
+      const leagues = countryQuery
+        ? (result.leagues || []).filter((league) => String(league.country?.name || "").toLocaleLowerCase("ru-RU").includes(countryQuery))
+        : result.leagues || [];
+      result = { ...result, leagues: sortByName(leagues) };
+      setCachedValue(cacheKey, result, 30 * 60 * 1000);
     }
-    return response.json({
-      ...result,
-      source: "API-Football",
-      meta: apiMeta(counter, rateLimit),
-    });
+    return response.json({ ...result, source: "Sportmonks", provider: "sportmonks", apiRequestCount: 0 });
   } catch (error) {
-    console.error("API-Football leagues request failed:", error);
-    return response.status(502).json({
-      error: {
-        code: "UPSTREAM_UNAVAILABLE",
-        message: "Не удалось загрузить список лиг.",
-      },
-      meta: apiMeta(counter),
-    });
+    console.error("Sportmonks leagues request failed:", error?.message || error);
+    return response.status(502).json({ error: { code: "UPSTREAM_UNAVAILABLE", message: "Не удалось загрузить список лиг из Sportmonks." } });
   }
 });
 
@@ -1031,43 +1016,19 @@ app.get("/api/leagues/:leagueId", async (request, response) => {
       error: { code: "INVALID_LEAGUE", message: "Укажите корректный ID лиги." },
     });
   }
-  if (!requireApiKey(response)) return;
-
-  const counter = { count: 0 };
-  const cacheKey = `league:${leagueId}`;
+  if (!sportmonksToken) return response.status(503).json({ error: { code: "SPORTMONKS_NOT_CONFIGURED", message: "Sportmonks не настроен." } });
+  const cacheKey = `sportmonks:league:${leagueId}`;
   try {
     let result = cachedValue(cacheKey);
-    let rateLimit = null;
     if (result === undefined) {
-      const payload = await fetchApiFootballPayload(
-        "/leagues",
-        { id: leagueId },
-        counter,
-      );
-      const league = normalizeLeague(payload.response[0]);
-      if (!league.id) {
-        return response.status(404).json({
-          error: { code: "LEAGUE_NOT_FOUND", message: "Лига не найдена." },
-        });
-      }
-      result = { league };
-      rateLimit = payload.rateLimit;
-      setCachedValue(cacheKey, result, 6 * 60 * 60 * 1000);
+      result = await sportmonksProvider.leagueById(leagueId);
+      setCachedValue(cacheKey, result, 30 * 60 * 1000);
     }
-    return response.json({
-      ...result,
-      source: "API-Football",
-      meta: apiMeta(counter, rateLimit),
-    });
+    if (!result.league?.id) return response.status(404).json({ error: { code: "LEAGUE_NOT_FOUND", message: "Лига не найдена." } });
+    return response.json({ ...result, source: "Sportmonks", provider: "sportmonks", apiRequestCount: 0 });
   } catch (error) {
-    console.error("API-Football league request failed:", error);
-    return response.status(502).json({
-      error: {
-        code: "UPSTREAM_UNAVAILABLE",
-        message: "Не удалось загрузить данные лиги.",
-      },
-      meta: apiMeta(counter),
-    });
+    console.error("Sportmonks league request failed:", error?.message || error);
+    return response.status(502).json({ error: { code: "UPSTREAM_UNAVAILABLE", message: "Не удалось загрузить данные лиги из Sportmonks." } });
   }
 });
 
@@ -1082,41 +1043,20 @@ app.get("/api/leagues/:leagueId/fixtures", async (request, response) => {
       },
     });
   }
-  if (!requireApiKey(response)) return;
-
-  const counter = { count: 0 };
-  const cacheKey = `league:fixtures:${leagueId}:${season}`;
+  if (!sportmonksToken) return response.status(503).json({ error: { code: "SPORTMONKS_NOT_CONFIGURED", message: "Sportmonks не настроен." } });
+  const cacheKey = `sportmonks:league:fixtures:${leagueId}:${season}`;
   try {
     let result = cachedValue(cacheKey);
-    let rateLimit = null;
     if (result === undefined) {
-      const payload = await fetchApiFootballPayload(
-        "/fixtures",
-        { league: leagueId, season },
-        counter,
-      );
-      const fixtures = payload.response
-        .map(normalizeMatch)
-        .filter((fixture) => fixture.fixtureId !== null)
-        .sort((a, b) => Number(a.timestamp || 0) - Number(b.timestamp || 0));
-      result = { league: leagueId, season, fixtures };
-      rateLimit = payload.rateLimit;
+      const payload = await sportmonksProvider.fixturesBySeason(season);
+      const fixtures = (payload.matches || []).filter((fixture) => String(fixture.league?.id) === String(leagueId));
+      result = { league: leagueId, season, fixtures, meta: payload.meta };
       setCachedValue(cacheKey, result, 5 * 60 * 1000);
     }
-    return response.json({
-      ...result,
-      source: "API-Football",
-      meta: apiMeta(counter, rateLimit),
-    });
+    return response.json({ ...result, source: "Sportmonks", provider: "sportmonks", apiRequestCount: 0 });
   } catch (error) {
-    console.error("API-Football league fixtures request failed:", error);
-    return response.status(502).json({
-      error: {
-        code: "UPSTREAM_UNAVAILABLE",
-        message: "Не удалось загрузить матчи лиги.",
-      },
-      meta: apiMeta(counter),
-    });
+    console.error("Sportmonks league fixtures request failed:", error?.message || error);
+    return response.status(502).json({ error: { code: "UPSTREAM_UNAVAILABLE", message: "Не удалось загрузить матчи лиги из Sportmonks." } });
   }
 });
 
@@ -1131,51 +1071,19 @@ app.get("/api/leagues/:leagueId/standings", async (request, response) => {
       },
     });
   }
-  if (!requireApiKey(response)) return;
-
-  const counter = { count: 0 };
-  const cacheKey = `league:standings:${leagueId}:${season}`;
+  if (!sportmonksToken) return response.status(503).json({ error: { code: "SPORTMONKS_NOT_CONFIGURED", message: "Sportmonks не настроен." } });
+  const cacheKey = `sportmonks:league:standings:${leagueId}:${season}`;
   try {
     let result = cachedValue(cacheKey);
-    let rateLimit = null;
     if (result === undefined) {
-      const payload = await fetchApiFootballPayload(
-        "/standings",
-        { league: leagueId, season },
-        counter,
-      );
-      const rawGroups = payload.response[0]?.league?.standings;
-      const groups = Array.isArray(rawGroups)
-        ? rawGroups
-            .map((rows, index) => {
-              const normalizedRows = Array.isArray(rows)
-                ? rows.map(normalizeStanding).filter(Boolean)
-                : [];
-              return {
-                name: rows?.[0]?.group || `Группа ${index + 1}`,
-                rows: normalizedRows,
-              };
-            })
-            .filter((group) => group.rows.length > 0)
-        : [];
-      result = { league: leagueId, season, groups };
-      rateLimit = payload.rateLimit;
+      const payload = await sportmonksProvider.standingsBySeason(season);
+      result = { league: leagueId, season, groups: payload.standings?.length ? [{ name: "Таблица", rows: payload.standings }] : [], meta: payload.meta };
       setCachedValue(cacheKey, result, 15 * 60 * 1000);
     }
-    return response.json({
-      ...result,
-      source: "API-Football",
-      meta: apiMeta(counter, rateLimit),
-    });
+    return response.json({ ...result, source: "Sportmonks", provider: "sportmonks", apiRequestCount: 0 });
   } catch (error) {
-    console.error("API-Football league standings request failed:", error);
-    return response.status(502).json({
-      error: {
-        code: "UPSTREAM_UNAVAILABLE",
-        message: "Не удалось загрузить таблицу лиги.",
-      },
-      meta: apiMeta(counter),
-    });
+    console.error("Sportmonks league standings request failed:", error?.message || error);
+    return response.status(502).json({ error: { code: "UPSTREAM_UNAVAILABLE", message: "Не удалось загрузить таблицу лиги из Sportmonks." } });
   }
 });
 

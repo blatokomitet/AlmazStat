@@ -141,3 +141,44 @@ test("teamsSearch uses the Sportmonks search endpoint", async () => {
     globalThis.fetch = originalFetch;
   }
 });
+
+test("leagueById maps current Sportmonks season IDs for downstream requests", async () => {
+  const result = await withMockedResponse(
+    {
+      id: 8,
+      name: "Premier League",
+      short_code: "UK PL",
+      image_path: "https://img.test/league.png",
+      type: "league",
+      country: { id: 462, name: "England" },
+      currentSeason: { id: 28083, name: "2026/2027", is_current: true, starting_at: "2026-08-01" },
+    },
+    (provider) => provider.leagueById(8),
+  );
+
+  assert.equal(result.league.country.name, "England");
+  assert.deepEqual(result.league.seasons[0], {
+    id: 28083,
+    year: 28083,
+    name: "2026/2027",
+    current: true,
+    start: "2026-08-01Z",
+    end: null,
+  });
+});
+
+test("fixturesBySeason sends the Sportmonks season filter", async () => {
+  const originalFetch = globalThis.fetch;
+  let requestedUrl = "";
+  globalThis.fetch = async (url) => {
+    requestedUrl = String(url);
+    return new Response(JSON.stringify({ data: [] }), { status: 200, headers: { "content-type": "application/json" } });
+  };
+  try {
+    const provider = createSportmonksProvider({ token: "test-token", baseUrl: "https://sportmonks.test/v3/football" });
+    await provider.fixturesBySeason(28083);
+    assert.match(requestedUrl, /filters=fixtureSeasons%3A28083/);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
