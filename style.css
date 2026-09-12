@@ -5309,49 +5309,46 @@ html[data-theme="light"] .theme-icon-sun {
 }
 
 html[data-theme="light"] {
-  --bg: #f3f6f4;
-  --surface: #ffffff;
-  --surface-2: #edf2ef;
-  --line: rgba(25, 50, 39, 0.14);
-  --text: #142019;
-  --muted: #65736c;
-  --blue: #0d9d5b;
-  --violet: #0d9d5b;
-  --green: #0d9d5b;
-  --red: #c43e4b;
-  --gold: #0d9d5b;
+  --bg: #eef2ef;
+  --surface: #f8faf8;
+  --surface-2: #e3eae6;
+  --line: #cbd4cf;
+  --text: #17241d;
+  --muted: #5b6a62;
+  --blue: #087a49;
+  --violet: #087a49;
+  --green: #087a49;
+  --red: #b83a45;
+  --gold: #087a49;
   color-scheme: light;
 }
 
 html[data-theme="light"],
 html[data-theme="light"] body {
-  background-color: #f3f6f4;
+  background-color: #eef2ef;
 }
 
 html[data-theme="light"] body {
-  background:
-    radial-gradient(circle at 14% 0%, rgba(13, 157, 91, 0.08), transparent 29%),
-    radial-gradient(circle at 96% 100%, rgba(13, 157, 91, 0.05), transparent 32%),
-    #f3f6f4;
+  background: #eef2ef;
 }
 
 html[data-theme="light"] ::selection {
-  background: rgba(13, 157, 91, 0.22);
-  color: #102219;
+  background: #c5e4d3;
+  color: #0b2e1d;
 }
 
 html[data-theme="light"] * {
-  scrollbar-color: rgba(13, 157, 91, 0.45) #e2e9e5;
+  scrollbar-color: #77aa91 #dce4df;
 }
 
 html[data-theme="light"] .site-shell {
-  border-color: rgba(25, 50, 39, 0.13);
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 26px 80px rgba(28, 55, 42, 0.12);
+  border-color: #cbd4cf;
+  background: #edf1ee;
+  box-shadow: 0 22px 64px rgba(35, 54, 44, 0.1);
 }
 
 html[data-theme="light"] .desktop-sidebar {
-  background: rgba(247, 250, 248, 0.98);
+  background: #e4eae6;
 }
 
 html[data-theme="light"] .header,
@@ -5360,11 +5357,11 @@ html[data-theme="light"] .dashboard-next,
 html[data-theme="light"] .dashboard-live-panel,
 html[data-theme="light"] .dashboard-schedule,
 html[data-theme="light"] .dashboard-live-band {
-  background: rgba(255, 255, 255, 0.97);
+  background: #f8faf8;
 }
 
 html[data-theme="light"] .dashboard-intro {
-  background: rgba(248, 251, 249, 0.98);
+  background: #f3f6f4;
 }
 
 html[data-theme="light"] .sidebar-sport,
@@ -5373,16 +5370,16 @@ html[data-theme="light"] .dashboard-date-switcher button,
 html[data-theme="light"] .language-switch,
 html[data-theme="light"] .theme-toggle,
 html[data-theme="light"] .bottom {
-  background: #edf2ef;
+  background: #e3eae6;
 }
 
 html[data-theme="light"] .dashboard-date-switcher,
 html[data-theme="light"] .bottom {
-  background: rgba(255, 255, 255, 0.97);
+  background: rgba(248, 250, 248, 0.97);
 }
 
 html[data-theme="light"] .dashboard-schedule-league-head {
-  background: #e8eeea;
+  background: #dce4df;
 }
 
 html[data-theme="light"] .image-placeholder,
@@ -5395,7 +5392,7 @@ html[data-theme="light"] .ai-market-signals > div,
 html[data-theme="light"] .dashboard-fixture,
 html[data-theme="light"] .dashboard-analysis-card,
 html[data-theme="light"] .dashboard-nav-grid a {
-  background: rgba(25, 50, 39, 0.045);
+  background: #e6ece8;
 }
 
 html[data-theme="light"] .crest {
@@ -5403,13 +5400,13 @@ html[data-theme="light"] .crest {
 }
 
 html[data-theme="light"] .language-option {
-  color: #5f6d66;
+  color: #56665d;
 }
 
 html[data-theme="light"] .language-option.active {
-  background: #ffffff;
-  color: #087c47;
-  box-shadow: 0 1px 4px rgba(28, 55, 42, 0.09);
+  background: #f8faf8;
+  color: #086c42;
+  box-shadow: 0 1px 3px rgba(35, 54, 44, 0.12);
 }
 
 html[data-theme="light"] .sidebar-nav a,
@@ -5439,14 +5436,115 @@ html[data-theme="light"] .sidebar-nav a.active {
 }
 
 html[data-theme="light"] .league-table tr.is-selected td {
-  background: rgba(13, 157, 91, 0.1);
+  background: #d9ebe1;
 }
 
 html[data-theme="light"] .match-card,
 html[data-theme="light"] .dashboard-hero,
 html[data-theme="light"] .team-hero,
 html[data-theme="light"] .player-hero {
-  box-shadow: 0 18px 48px rgba(28, 55, 42, 0.09);
+  box-shadow: 0 14px 38px rgba(35, 54, 44, 0.08);
+}
+
+html[data-theme="light"] .match-card,
+html[data-theme="light"] .dashboard-hero,
+html[data-theme="light"] .team-hero,
+html[data-theme="light"] .player-hero,
+html[data-theme="light"] .prediction,
+html[data-theme="light"] .news-provider-state,
+html[data-theme="light"] .ai-analysis-card {
+  border-color: var(--line);
+  background: var(--surface);
+}
+
+html[data-theme="light"] .match-card::after {
+  background: rgba(8, 122, 73, 0.06);
+}
+
+html[data-theme="light"] .prediction,
+html[data-theme="light"] .data-state,
+html[data-theme="light"] .matches-empty {
+  background: #f3f6f4;
+}
+
+html[data-theme="light"] .match-filters button.active,
+html[data-theme="light"] .league-match-filters button.active,
+html[data-theme="light"] .date-switcher button.active,
+html[data-theme="light"] .tab.active,
+html[data-theme="light"] .news-categories button.active,
+html[data-theme="light"] .team-filter-tabs button.active,
+html[data-theme="light"] .dashboard-match-filters button.active,
+html[data-theme="light"] .dashboard-date-switcher button.active {
+  border-color: #8fbda5;
+  background: #d9ebe1;
+  color: #0a6840;
+}
+
+html[data-theme="light"] .bottom-item.active,
+html[data-theme="light"] .back-link,
+html[data-theme="light"] .data-back-link,
+html[data-theme="light"] .prediction-label,
+html[data-theme="light"] .prediction-advice,
+html[data-theme="light"] .dashboard-section-head > a,
+html[data-theme="light"] .dashboard-more,
+html[data-theme="light"] .dashboard-cta.secondary,
+html[data-theme="light"] .dashboard-chips span {
+  color: #087a49;
+}
+
+html[data-theme="light"] .data-submit,
+html[data-theme="light"] .retry-button,
+html[data-theme="light"] .dashboard-cta,
+html[data-theme="light"] .statistics-context,
+html[data-theme="light"] .placeholder-badge {
+  border-color: #8fbda5;
+  background: #d9ebe1;
+  color: #0a6840;
+}
+
+html[data-theme="light"] .matches-empty-icon,
+html[data-theme="light"] .data-state-mark,
+html[data-theme="light"] .news-provider-state > span {
+  background: #dcebe3;
+  color: #087a49;
+}
+
+html[data-theme="light"] .match-search input:focus,
+html[data-theme="light"] .data-field input:focus {
+  border-color: #087a49;
+  box-shadow: 0 0 0 3px rgba(8, 122, 73, 0.12);
+}
+
+html[data-theme="light"] .tab:focus-visible,
+html[data-theme="light"] .retry-button:focus-visible,
+html[data-theme="light"] .back-link:focus-visible,
+html[data-theme="light"] .bottom-item:focus-visible {
+  outline-color: #087a49;
+}
+
+html[data-theme="light"] .data-field input::placeholder,
+html[data-theme="light"] .matches-meta,
+html[data-theme="light"] .dashboard-search-link,
+html[data-theme="light"] .dashboard-date-switcher button,
+html[data-theme="light"] .dashboard-date-switcher button small,
+html[data-theme="light"] .news-detail-copy {
+  color: var(--muted);
+}
+
+html[data-theme="light"] .ai-analysis-badge span {
+  color: #f7fbf8;
+}
+
+html[data-theme="light"] .ai-analysis-score > div,
+html[data-theme="light"] .ai-market-signals > div {
+  background: #e6ece8;
+}
+
+@media (max-width: 799px) {
+  html[data-theme="light"] .site-shell {
+    background: transparent;
+    box-shadow: none;
+  }
 }
 
 @media (max-width: 460px) {

@@ -80,7 +80,7 @@
     const light = uiTheme === "light";
     document.documentElement.dataset.theme = uiTheme;
     document.documentElement.style.colorScheme = uiTheme;
-    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", light ? "#f3f6f4" : "#0d1014");
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", light ? "#eef2ef" : "#0d1014");
     const targetLabel = uiLanguage === "en"
       ? (light ? "Dark theme" : "Light theme")
       : (light ? "Тёмная тема" : "Светлая тема");
@@ -93,8 +93,8 @@
       button.querySelectorAll("[data-theme-label]").forEach((label) => { label.textContent = targetLabel; });
     });
     if (telegram) {
-      telegram.setHeaderColor?.(light ? "#f3f6f4" : "#0d1014");
-      telegram.setBackgroundColor?.(light ? "#f3f6f4" : "#0d1014");
+      telegram.setHeaderColor?.(light ? "#eef2ef" : "#0d1014");
+      telegram.setBackgroundColor?.(light ? "#eef2ef" : "#0d1014");
     }
   }
   function translatePhrase(value) {

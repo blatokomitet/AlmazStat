@@ -136,7 +136,7 @@ AlmazStat выглядит как компактная операторская 
 
 **The One Signal Rule.** Primary green is the only accent: do not revive gold or indigo for branding, priority, selection, or focus.
 
-**Theme parity.** Пользователь может переключаться между графитовой и светлой операторской темой. Светлая тема использует холодный белый canvas, белые панели, чернильный текст и тот же Signal Green; композиция, плотность и семантика цветов не меняются. Выбор темы сохраняется локально.
+**Theme parity.** Пользователь может переключаться между графитовой и светлой операторской темой. Светлая тема использует приглушённый mineral canvas `#EEF2EF`, панели `#F8FAF8`, приподнятые поверхности `#E3EAE6`, чернильный текст `#17241D`, вторичный текст `#5B6A62` и глубокий Signal Green `#087A49`. Сиреневые заливки запрещены; композиция, плотность и семантика цветов не меняются. Выбор темы сохраняется локально.
 
 **The Verified Live Rule.** Green may label LIVE only when the API status belongs to the verified live-status set; otherwise show a factual empty or upcoming state.
 
