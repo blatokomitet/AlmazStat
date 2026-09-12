@@ -71,8 +71,6 @@ const teamRecentMethod = `
         "latest.scores",
         "latest.state",
         "latest.league",
-        "latest.statistics.type",
-        "latest.xGFixture.type",
       ].join(";"),
     });
 
@@ -80,7 +78,13 @@ const teamRecentMethod = `
     const latest = Array.isArray(team?.latest) ? team.latest : [];
     const matches = latest
       .map((fixture) => normalizeRecentFormFixture(fixture, teamId))
-      .filter((fixture) => fixture.fixtureId !== null)
+      .filter((fixture) =>
+        fixture.fixtureId !== null &&
+        fixture.side !== null &&
+        fixture.opponent.id !== null &&
+        fixture.result !== null &&
+        ["FT", "AET", "PEN"].includes(fixture.state),
+      )
       .sort((a, b) => Number(b.date ? Date.parse(b.date) : 0) - Number(a.date ? Date.parse(a.date) : 0))
       .slice(0, Math.max(1, Math.min(Number(limit) || 5, 10)));
 

@@ -2,6 +2,7 @@ import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createSportmonksProvider } from "./lib/sportmonks-provider.js";
+import { loadMatchRecentForm } from "./lib/recent-form-service.js";
 
 const app = express();
 const port = Number(process.env.PORT);
@@ -2206,33 +2207,27 @@ app.get("/api/match/:fixture/form", async (request, response) => {
   try {
     const key = `sportmonks:form:${fixtureId}`;
     let result = cachedValue(key);
+    let apiRequestCount = 0;
 
     if (result === undefined) {
-      const centre = await getSportmonksMatchCentre(fixtureId);
-      if (!centre?.home?.id || !centre?.away?.id) {
+      result = await loadMatchRecentForm({
+        fixtureId,
+        getMatchCentre: getSportmonksMatchCentre,
+        teamRecentForm: sportmonksProvider.teamRecentForm,
+        limit: 5,
+      });
+      apiRequestCount = 3;
+
+      if (!result) {
         return response.status(404).json({
           error: { code: "FIXTURE_NOT_FOUND", message: "Матч не найден." },
         });
       }
 
-      const [homeRecent, awayRecent] = await Promise.all([
-        sportmonksProvider.teamRecentForm(centre.home.id, { limit: 5 }),
-        sportmonksProvider.teamRecentForm(centre.away.id, { limit: 5 }),
-      ]);
-
-      const form = {
-        home: homeRecent?.matches || [],
-        away: awayRecent?.matches || [],
-      };
-      result = {
-        form,
-        source: form.home.length > 0 && form.away.length > 0,
-        provider: "sportmonks",
-      };
       setCachedValue(key, result, 30 * 60 * 1000);
     }
 
-    return response.json({ ...result, meta: { apiRequestCount: 3 } });
+    return response.json({ ...result, meta: { apiRequestCount } });
   } catch (error) {
     console.error("Sportmonks form request failed:", error?.message || error);
     return response.status(502).json({

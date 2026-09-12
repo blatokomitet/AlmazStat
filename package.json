@@ -5,6 +5,8 @@
   "scripts": {
     "start": "node server.js",
     "prod": "NODE_ENV=production node server.js",
+    "check": "node --check app.js && node --check server.js && node --check lib/sportmonks-provider.js && node --check lib/recent-form-service.js",
+    "test": "node --test",
     "check:sportmonks": "node scripts/check-sportmonks.js"
   },
   "private": true,
