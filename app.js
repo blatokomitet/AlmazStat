@@ -338,6 +338,35 @@
   document.addEventListener("error", (event) => {
     const image = event.target;
     if (!(image instanceof HTMLImageElement) || image.dataset.fallbackApplied === "true") return;
+    const retryCount = Number(image.dataset.mediaRetry || 0);
+    let currentUrl;
+    try {
+      currentUrl = new URL(image.currentSrc || image.src, window.location.origin);
+    } catch {
+      currentUrl = null;
+    }
+
+    if (currentUrl?.pathname === "/api/media" && retryCount < 2) {
+      image.dataset.mediaRetry = String(retryCount + 1);
+      currentUrl.searchParams.set("retry", `${Date.now()}-${retryCount + 1}`);
+      image.style.visibility = "hidden";
+      image.addEventListener("load", () => { image.style.visibility = ""; }, { once: true });
+      window.setTimeout(() => { image.src = currentUrl.href; }, 600 * (retryCount + 1));
+      return;
+    }
+
+    if (currentUrl?.pathname === "/api/media" && retryCount === 2) {
+      const directUrl = currentUrl.searchParams.get("url");
+      if (directUrl) {
+        image.dataset.mediaRetry = "3";
+        image.referrerPolicy = "no-referrer";
+        image.style.visibility = "hidden";
+        image.addEventListener("load", () => { image.style.visibility = ""; }, { once: true });
+        image.src = directUrl;
+        return;
+      }
+    }
+
     const placeholder = document.createElement("span");
     placeholder.className = `${image.className || ""} image-placeholder`.trim();
     placeholder.setAttribute("aria-hidden", "true");

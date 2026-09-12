@@ -2548,6 +2548,7 @@ app.get("/api/media", async (request, response) => {
     return response.send(media.buffer);
   } catch (error) {
     console.error("Sportmonks media request failed:", error?.message || error);
+    response.set("Cache-Control", "no-store");
     if (Number.isInteger(error?.status)) return response.status(error.status).end();
     return response.status(502).json({ error: { code: "MEDIA_UNAVAILABLE", message: "Изображение временно недоступно." } });
   }
