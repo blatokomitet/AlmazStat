@@ -8,6 +8,11 @@ import { createGeminiAnalysisProvider } from "./lib/gemini-analysis-provider.js"
 
 const app = express();
 const port = Number(process.env.PORT);
+const trustProxyHops = Number.parseInt(process.env.TRUST_PROXY_HOPS || "0", 10);
+
+if (Number.isInteger(trustProxyHops) && trustProxyHops > 0) {
+  app.set("trust proxy", trustProxyHops);
+}
 const apiFootballKey = process.env.API_FOOTBALL_KEY;
 const sportmonksToken = process.env.SPORTMONKS_API_TOKEN;
 function readOptionalSecretFile(fileName) {
@@ -26,12 +31,14 @@ const sportmonksProvider = createSportmonksProvider({ token: sportmonksToken });
 const geminiAnalysisProvider = createGeminiAnalysisProvider({ apiKey: geminiApiKey });
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 const dataCache = new Map();
+const dataCacheMaxEntries = 1000;
 const apiFootballInflight = new Map();
 const mediaCache = new Map();
 const mediaInflight = new Map();
 const mediaCacheTtlMs = 24 * 60 * 60 * 1000;
 const mediaCacheMaxEntries = 500;
 const aiRequestWindows = new Map();
+const aiRequestWindowsMaxEntries = 5000;
 const aiRequestsPerHour = 12;
 
 if (!Number.isInteger(port) || port <= 0) {
@@ -787,9 +794,21 @@ function cachedValue(key) {
 }
 
 function setCachedValue(key, value, ttl) {
+  const now = Date.now();
+
+  if (!dataCache.has(key) && dataCache.size >= dataCacheMaxEntries) {
+    for (const [cacheKey, entry] of dataCache) {
+      if (entry.expiresAt <= now) dataCache.delete(cacheKey);
+    }
+    while (dataCache.size >= dataCacheMaxEntries) {
+      dataCache.delete(dataCache.keys().next().value);
+    }
+  }
+
+  if (dataCache.has(key)) dataCache.delete(key);
   dataCache.set(key, {
     value,
-    expiresAt: Date.now() + ttl,
+    expiresAt: now + ttl,
   });
   return value;
 }
@@ -1970,10 +1989,21 @@ function aiRateLimitAllows(key) {
   const now = Date.now();
   const windowMs = 60 * 60 * 1000;
   const current = aiRequestWindows.get(key);
+
   if (!current || current.startedAt + windowMs <= now) {
+    if (!aiRequestWindows.has(key) && aiRequestWindows.size >= aiRequestWindowsMaxEntries) {
+      for (const [rateKey, window] of aiRequestWindows) {
+        if (window.startedAt + windowMs <= now) aiRequestWindows.delete(rateKey);
+      }
+      while (aiRequestWindows.size >= aiRequestWindowsMaxEntries) {
+        aiRequestWindows.delete(aiRequestWindows.keys().next().value);
+      }
+    }
+
     aiRequestWindows.set(key, { startedAt: now, count: 1 });
     return true;
   }
+
   if (current.count >= aiRequestsPerHour) return false;
   current.count += 1;
   return true;
@@ -2193,27 +2223,29 @@ app.get("/api/match/:fixture/h2h", async (request, response) => {
   }
 });
 
-app.get("/api/debug/standings/:fixture", async (request, response) => {
-  const fixtureId = String(request.params.fixture || "").trim();
-  const diagnostic = { fixtureId, sportmonksConfigured: Boolean(sportmonksToken), seasonId: null, home: null, away: null, upstream: { ok: false, status: null, rowCount: null, includeMode: null, error: null } };
-  if (!sportmonksToken) return response.status(503).json({ ...diagnostic, upstream: { ...diagnostic.upstream, error: "SPORTMONKS_NOT_CONFIGURED" } });
-  try {
-    const centre = await getSportmonksMatchCentre(fixtureId);
-    diagnostic.seasonId = centre?.league?.season ?? null;
-    diagnostic.home = centre?.home ? { id: centre.home.id ?? null, name: centre.home.name ?? null } : null;
-    diagnostic.away = centre?.away ? { id: centre.away.id ?? null, name: centre.away.name ?? null } : null;
-    if (!diagnostic.seasonId) return response.status(404).json({ ...diagnostic, upstream: { ...diagnostic.upstream, error: "SEASON_ID_MISSING" } });
-    const table = await sportmonksProvider.standingsBySeason(diagnostic.seasonId);
-    const rows = Array.isArray(table?.standings) ? table.standings : [];
-    diagnostic.upstream = { ok: true, status: 200, rowCount: rows.length, includeMode: table?.meta?.includeMode ?? null, error: null };
-    diagnostic.matches = { home: rows.some(row => Number(row?.team?.id) === Number(diagnostic.home?.id)), away: rows.some(row => Number(row?.team?.id) === Number(diagnostic.away?.id)) };
-    diagnostic.sample = rows.slice(0, 3).map(row => ({ rank: row?.rank ?? null, teamId: row?.team?.id ?? null, teamName: row?.team?.name ?? null, points: row?.points ?? null }));
-    return response.json(diagnostic);
-  } catch (error) {
-    diagnostic.upstream = { ok: false, status: Number(error?.status) || null, rowCount: null, includeMode: null, error: String(error?.message || error || "UNKNOWN_ERROR").slice(0, 300) };
-    return response.status(502).json(diagnostic);
-  }
-});
+if (process.env.NODE_ENV !== "production") {
+  app.get("/api/debug/standings/:fixture", async (request, response) => {
+    const fixtureId = String(request.params.fixture || "").trim();
+    const diagnostic = { fixtureId, sportmonksConfigured: Boolean(sportmonksToken), seasonId: null, home: null, away: null, upstream: { ok: false, status: null, rowCount: null, includeMode: null, error: null } };
+    if (!sportmonksToken) return response.status(503).json({ ...diagnostic, upstream: { ...diagnostic.upstream, error: "SPORTMONKS_NOT_CONFIGURED" } });
+    try {
+      const centre = await getSportmonksMatchCentre(fixtureId);
+      diagnostic.seasonId = centre?.league?.season ?? null;
+      diagnostic.home = centre?.home ? { id: centre.home.id ?? null, name: centre.home.name ?? null } : null;
+      diagnostic.away = centre?.away ? { id: centre.away.id ?? null, name: centre.away.name ?? null } : null;
+      if (!diagnostic.seasonId) return response.status(404).json({ ...diagnostic, upstream: { ...diagnostic.upstream, error: "SEASON_ID_MISSING" } });
+      const table = await sportmonksProvider.standingsBySeason(diagnostic.seasonId);
+      const rows = Array.isArray(table?.standings) ? table.standings : [];
+      diagnostic.upstream = { ok: true, status: 200, rowCount: rows.length, includeMode: table?.meta?.includeMode ?? null, error: null };
+      diagnostic.matches = { home: rows.some(row => Number(row?.team?.id) === Number(diagnostic.home?.id)), away: rows.some(row => Number(row?.team?.id) === Number(diagnostic.away?.id)) };
+      diagnostic.sample = rows.slice(0, 3).map(row => ({ rank: row?.rank ?? null, teamId: row?.team?.id ?? null, teamName: row?.team?.name ?? null, points: row?.points ?? null }));
+      return response.json(diagnostic);
+    } catch (error) {
+      diagnostic.upstream = { ok: false, status: Number(error?.status) || null, rowCount: null, includeMode: null, error: String(error?.message || error || "UNKNOWN_ERROR").slice(0, 300) };
+      return response.status(502).json(diagnostic);
+    }
+  });
+}
 
 app.get("/api/match/:fixture/standings", async (request, response) => {
   const fixtureId = String(request.params.fixture || "").trim();
