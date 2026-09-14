@@ -972,3 +972,324 @@ html[data-theme="light"] .dashboard-search-link {
     height: 44px;
   }
 }
+
+
+/* Match Centre v2 — visual hierarchy and mobile usability */
+.analysis-screen {
+  width: min(100%, 980px);
+}
+
+.analysis-screen .back-link {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 0 10px;
+  border: 1px solid var(--cr-border);
+  border-radius: 8px;
+  background: rgba(255,255,255,.018);
+}
+
+.analysis-screen .match-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.analysis-screen .match-card::before {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% -10%, rgba(34,229,139,.08), transparent 38%);
+  content: "";
+  pointer-events: none;
+}
+
+.analysis-screen .match-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.analysis-screen .teams {
+  align-items: center;
+}
+
+.analysis-screen .team {
+  min-width: 0;
+}
+
+.analysis-screen .team-name {
+  overflow: hidden;
+  max-width: 16ch;
+  text-overflow: ellipsis;
+}
+
+.analysis-screen .match-center {
+  min-width: 88px;
+}
+
+.analysis-screen .score {
+  letter-spacing: -.04em;
+}
+
+.analysis-screen .fixture-status {
+  margin-top: 5px;
+  font-size: 10px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.analysis-screen .match-time {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--cr-border);
+}
+
+.analysis-screen .match-time span {
+  color: var(--cr-muted);
+  font-size: 9px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.analysis-screen .match-time strong {
+  margin-top: 3px;
+  font-size: 12px;
+}
+
+.analysis-screen .tabs {
+  position: sticky;
+  top: 8px;
+  z-index: 12;
+  overflow-x: auto;
+  margin-top: 10px;
+  padding: 7px;
+  border: 1px solid var(--cr-border);
+  border-radius: 9px;
+  background: rgba(9, 14, 19, .92);
+  backdrop-filter: blur(16px);
+  scrollbar-width: none;
+}
+
+.analysis-screen .tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.analysis-screen .tab {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 0 11px;
+  scroll-snap-align: start;
+  white-space: nowrap;
+  font-size: 10px;
+}
+
+.analysis-screen .tabs {
+  scroll-snap-type: x proximity;
+}
+
+.analysis-screen .content-view {
+  padding-top: 2px;
+}
+
+.analysis-screen .section-head {
+  align-items: end;
+}
+
+.analysis-screen .section-title {
+  font-size: 14px;
+}
+
+.analysis-screen .section-label {
+  color: var(--cr-muted);
+  font-size: 9px;
+}
+
+.analysis-screen .prediction {
+  padding: 16px;
+}
+
+.analysis-screen .prediction-main {
+  gap: 4px;
+}
+
+.analysis-screen .prediction-main strong {
+  font-size: clamp(24px, 4vw, 34px);
+}
+
+.analysis-screen .probabilities {
+  gap: 8px;
+}
+
+.analysis-screen .prob {
+  min-height: 70px;
+  padding: 10px;
+  border: 1px solid var(--cr-border);
+  border-radius: 8px;
+  background: rgba(255,255,255,.018);
+}
+
+.analysis-screen .prob span {
+  font-size: 9px;
+}
+
+.analysis-screen .prob strong {
+  font-family: "Space Mono", monospace;
+  font-size: 16px;
+}
+
+.analysis-screen .overview-signal {
+  gap: 8px;
+}
+
+.analysis-screen .signal-cell {
+  border-color: var(--cr-border);
+  border-radius: 8px;
+  background: rgba(255,255,255,.018);
+}
+
+.analysis-screen .signal-cell.accent {
+  border-color: rgba(34,229,139,.22);
+  background: rgba(34,229,139,.055);
+}
+
+.analysis-screen .ai-analysis-card {
+  border-color: var(--cr-border);
+  border-radius: 10px;
+  background:
+    linear-gradient(145deg, rgba(34,229,139,.045), transparent 40%),
+    var(--cr-panel);
+}
+
+.analysis-screen .ai-analysis-card footer {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--cr-border);
+  color: var(--cr-muted);
+  font-size: 10px;
+}
+
+@media (min-width: 1040px) {
+  .analysis-screen #view-overview.active {
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(280px, .92fr);
+    gap: 14px;
+    align-items: start;
+  }
+
+  .analysis-screen #view-overview.active .section:first-child {
+    grid-row: 1 / span 2;
+  }
+
+  .analysis-screen #view-overview.active .section {
+    margin-top: 14px;
+  }
+}
+
+@media (max-width: 799px) {
+  .analysis-screen {
+    width: 100%;
+  }
+
+  .analysis-screen .back-link {
+    min-height: 34px;
+    margin-bottom: 8px;
+    font-size: 10px;
+  }
+
+  .analysis-screen .match-card {
+    padding: 12px 10px;
+  }
+
+  .analysis-screen .league {
+    margin-bottom: 10px;
+    font-size: 9px;
+  }
+
+  .analysis-screen .teams {
+    grid-template-columns: minmax(0,1fr) 64px minmax(0,1fr);
+    gap: 5px;
+  }
+
+  .analysis-screen .crest {
+    width: 46px;
+    height: 46px;
+  }
+
+  .analysis-screen .team-name {
+    max-width: 12ch;
+    font-size: 11px;
+    line-height: 1.18;
+  }
+
+  .analysis-screen .score {
+    font-size: 22px;
+  }
+
+  .analysis-screen .fixture-status {
+    font-size: 9px;
+  }
+
+  .analysis-screen .match-time {
+    margin-top: 10px;
+    padding-top: 9px;
+  }
+
+  .analysis-screen .match-time strong {
+    font-size: 11px;
+  }
+
+  .analysis-screen .tabs {
+    top: 6px;
+    margin-inline: -2px;
+    padding: 5px;
+  }
+
+  .analysis-screen .tab {
+    min-height: 34px;
+    padding-inline: 9px;
+    font-size: 9px;
+  }
+
+  .analysis-screen .section {
+    margin-top: 15px;
+  }
+
+  .analysis-screen .section-head {
+    margin-bottom: 8px;
+  }
+
+  .analysis-screen .prediction {
+    padding: 12px;
+  }
+
+  .analysis-screen .prediction-main strong {
+    font-size: 24px;
+  }
+
+  .analysis-screen .probabilities {
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    gap: 6px;
+  }
+
+  .analysis-screen .prob {
+    min-height: 62px;
+    padding: 8px 6px;
+  }
+
+  .analysis-screen .prob span {
+    font-size: 8px;
+  }
+
+  .analysis-screen .prob strong {
+    font-size: 14px;
+  }
+
+  .analysis-screen .overview-signal {
+    grid-template-columns: 1fr;
+  }
+
+  .analysis-screen .signal-cell {
+    min-height: 62px;
+    padding: 10px 11px;
+  }
+}
