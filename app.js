@@ -3490,14 +3490,61 @@
 
   function renderDashboardShell() {
     elements.dashboardScreen.innerHTML = `
-      <section class="dashboard-intro"><div><h1>${dashboardDayTitle()}</h1><p id="dashboard-date">Расписание игрового дня</p></div><div class="dashboard-intro-tools"><a class="dashboard-search-link" data-route="/matches" href="/matches"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 5 5"></path></svg><span>Поиск команд, лиг, матчей…</span></a><div class="dashboard-intro-meta"><span id="dashboard-match-count">Получаем матчи</span><a data-route="/matches" href="/matches">Все матчи</a></div></div></section>
+      <section class="dashboard-intro">
+        <div>
+          <h1>${dashboardDayTitle()}</h1>
+          <p id="dashboard-date">Расписание игрового дня</p>
+        </div>
+        <div class="dashboard-intro-tools">
+          <a class="dashboard-search-link" data-route="/matches" href="/matches">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 5 5"></path></svg>
+            <span>Поиск команд, лиг, матчей…</span>
+          </a>
+          <div class="dashboard-intro-meta">
+            <span id="dashboard-match-count">Получаем матчи</span>
+            <a data-route="/matches" href="/matches">Все матчи</a>
+          </div>
+        </div>
+      </section>
+      <nav class="dashboard-command-strip" aria-label="Быстрый обзор">
+        <a class="dashboard-command-card is-live" data-route="/matches" href="/matches?filter=live">
+          <span class="dashboard-command-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 8a6 6 0 0 0 0 8m14-8a6 6 0 0 1 0 8M8 10a3 3 0 0 0 0 4m8-4a3 3 0 0 1 0 4"/><circle cx="12" cy="12" r="2"/></svg></span>
+          <span class="dashboard-command-copy"><strong>LIVE сейчас</strong><span>Матчи в эфире</span></span>
+          <b id="dashboard-live-count">—</b>
+        </a>
+        <a class="dashboard-command-card" data-route="/matches" href="/matches">
+          <span class="dashboard-command-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 4v3m12-3v3M4 9h16v11H4z"/><path d="M8 13h3m2 0h3m-8 3h3"/></svg></span>
+          <span class="dashboard-command-copy"><strong>Сегодня</strong><span>Полное расписание</span></span>
+          <b id="dashboard-today-count">—</b>
+        </a>
+        <a class="dashboard-command-card" data-route="/leagues" href="/leagues">
+          <span class="dashboard-command-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0Zm0 2H5v2a3 3 0 0 0 3 3m8-5h3v2a3 3 0 0 1-3 3M12 13v4m-4 3h8"/></svg></span>
+          <span class="dashboard-command-copy"><strong>Топ-лиги</strong><span>Турниры и таблицы</span></span>
+          <b>8</b>
+        </a>
+        <a class="dashboard-command-card" data-route="/statistics" href="/statistics">
+          <span class="dashboard-command-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 20V10m7 10V4m7 16v-7"/></svg></span>
+          <span class="dashboard-command-copy"><strong>Аналитика</strong><span>Статистика и контекст</span></span>
+          <b>↗</b>
+        </a>
+      </nav>
       <div class="dashboard-date-switcher" role="group" aria-label="День матчей">${[-1, 0, 1].map((offset) => `<button class="${dashboardDayOffset === offset ? "active" : ""}" type="button" data-dashboard-day="${offset}" aria-pressed="${dashboardDayOffset === offset}">${dashboardDayLabel(offset)}</button>`).join("")}</div>
       <div class="dashboard-stage">
-        <section class="dashboard-live-panel"><div class="dashboard-panel-head"><h2><span class="dashboard-live-dot"></span>LIVE сейчас</h2><a data-route="/matches" href="/matches?filter=live">Все LIVE</a></div><div data-dashboard-block="live">${dashboardState("Проверяем эфир", "Получаем текущие статусы матчей…")}</div></section>
+        <section class="dashboard-live-panel">
+          <div class="dashboard-panel-head"><h2><span class="dashboard-live-dot"></span>LIVE сейчас</h2><a data-route="/matches" href="/matches?filter=live">Все LIVE</a></div>
+          <div data-dashboard-block="live">${dashboardState("Проверяем эфир", "Получаем текущие статусы матчей…")}</div>
+        </section>
         <section class="dashboard-feature" data-dashboard-block="feature">${dashboardState("Загрузка матча дня", "Выбираем главный матч сегодняшнего расписания…")}</section>
-        <section class="dashboard-next"><div class="dashboard-panel-head"><h2>Матчи сегодня</h2><a data-route="/matches" href="/matches">Все</a></div>${dashboardFilterControls()}<div data-dashboard-block="next">${dashboardState("Загрузка матчей", "Собираем ближайшие важные игры…")}</div></section>
+        <section class="dashboard-next">
+          <div class="dashboard-panel-head"><h2>Матчи сегодня</h2><a data-route="/matches" href="/matches">Все</a></div>
+          ${dashboardFilterControls()}
+          <div data-dashboard-block="next">${dashboardState("Загрузка матчей", "Собираем ближайшие важные игры…")}</div>
+        </section>
       </div>
-      <section class="dashboard-schedule"><div class="dashboard-panel-head"><div><h2>Расписание матчей</h2><p>Сегодня · по соревнованиям</p></div><a data-route="/matches" href="/matches">Открыть матч-центр</a></div><div data-dashboard-block="schedule">${dashboardState("Загрузка расписания", "Получаем все матчи игрового дня…")}</div></section>`;
+      <section class="dashboard-schedule">
+        <div class="dashboard-panel-head"><div><h2>Расписание матчей</h2><p>Сегодня · по соревнованиям</p></div><a data-route="/matches" href="/matches">Открыть матч-центр</a></div>
+        <div data-dashboard-block="schedule">${dashboardState("Загрузка расписания", "Получаем все матчи игрового дня…")}</div>
+      </section>`;
   }
 
   async function loadDashboard(forceMatches = false) {
@@ -3545,6 +3592,10 @@
       if (dashboardDate) dashboardDate.textContent = formatMatchDay(dashboardDateValue);
       const dashboardMatchCount = document.getElementById("dashboard-match-count");
       if (dashboardMatchCount) dashboardMatchCount.textContent = countLabel(matches.length, "матч", "матча", "матчей");
+      const dashboardLiveCount = document.getElementById("dashboard-live-count");
+      if (dashboardLiveCount) dashboardLiveCount.textContent = String(live.length);
+      const dashboardTodayCount = document.getElementById("dashboard-today-count");
+      if (dashboardTodayCount) dashboardTodayCount.textContent = String(matches.length);
       renderDashboardBlock("feature", dashboardFeaturedFixture(featured));
       renderDashboardBlock("next", dashboardNextMatches(next));
       renderDashboardBlock("live", dashboardLiveBand(live));
