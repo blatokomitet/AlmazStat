@@ -832,3 +832,143 @@ html[data-theme="light"] .dashboard-search-link {
     margin-bottom: 3px;
   }
 }
+
+
+/* Mobile density pass — tighten the home experience without changing data or navigation */
+@media (max-width: 799px) {
+  .dashboard-screen {
+    gap: 10px;
+  }
+
+  .dashboard-intro {
+    min-height: 126px;
+  }
+
+  .dashboard-command-strip {
+    gap: 6px;
+  }
+
+  .dashboard-command-card {
+    min-height: 52px;
+  }
+
+  .dashboard-date-switcher button {
+    min-height: 44px;
+  }
+
+  .dashboard-live-panel {
+    padding: 11px 12px;
+  }
+
+  .dashboard-feature {
+    min-height: 232px;
+  }
+
+  .dashboard-featured-match {
+    min-height: 230px;
+    padding: 12px 11px 14px;
+  }
+
+  .dashboard-featured-top {
+    padding-bottom: 8px;
+  }
+
+  .dashboard-featured-body {
+    grid-template-columns: minmax(0, 1fr) 62px minmax(0, 1fr);
+    gap: 6px;
+    min-height: 166px;
+    padding-top: 8px;
+  }
+
+  .dashboard-team-mark.is-featured {
+    width: 48px;
+    height: 48px;
+  }
+
+  .dashboard-featured-team {
+    gap: 6px;
+  }
+
+  .dashboard-featured-team > strong {
+    font-size: clamp(12px, 3.7vw, 15px);
+    line-height: 1.12;
+  }
+
+  .dashboard-featured-team > small {
+    font-size: 9px;
+  }
+
+  .dashboard-featured-centre {
+    gap: 5px;
+  }
+
+  .dashboard-featured-centre > strong {
+    font-size: clamp(18px, 5.2vw, 24px);
+  }
+
+  .dashboard-featured-centre > i {
+    font-size: 9px;
+  }
+
+  .dashboard-next {
+    padding: 11px 12px;
+  }
+
+  .dashboard-match-filters {
+    margin-bottom: 7px;
+    padding-bottom: 7px;
+  }
+
+  .dashboard-next-match {
+    min-height: 60px;
+    padding-block: 7px;
+  }
+
+  .dashboard-next-time {
+    font-size: 11px;
+  }
+
+  .dashboard-next-teams b {
+    font-size: 10px;
+  }
+
+  .dashboard-next-match > small {
+    font-size: 9px;
+  }
+
+  .dashboard-schedule {
+    padding-top: 11px;
+  }
+
+  .dashboard-schedule-league + .dashboard-schedule-league {
+    margin-top: 7px;
+  }
+
+  .dashboard-schedule-league-head {
+    min-height: 32px;
+  }
+
+  .dashboard-schedule-row {
+    min-height: 54px;
+  }
+}
+
+@media (max-width: 390px) {
+  .dashboard-feature {
+    min-height: 218px;
+  }
+
+  .dashboard-featured-match {
+    min-height: 216px;
+  }
+
+  .dashboard-featured-body {
+    grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr);
+    min-height: 154px;
+  }
+
+  .dashboard-team-mark.is-featured {
+    width: 44px;
+    height: 44px;
+  }
+}
