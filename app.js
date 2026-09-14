@@ -497,7 +497,10 @@
 
   function formatMatchTime(value) {
     if (!value) return "Нет данных";
-    const date = new Date(value);
+    const source = String(value);
+    const sourceClock = source.match(/[T ](\d{2}):(\d{2})(?::\d{2})?/);
+    if (sourceClock) return `${sourceClock[1]}:${sourceClock[2]}`;
+    const date = new Date(source);
     if (Number.isNaN(date.getTime())) return "Нет данных";
     const hours = String(date.getHours()).padStart(2, "0");
     const minutes = String(date.getMinutes()).padStart(2, "0");
