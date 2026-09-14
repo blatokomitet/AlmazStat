@@ -48,9 +48,12 @@ API_FOOTBALL_KEY=YOUR_REAL_API_FOOTBALL_KEY
 SPORTMONKS_API_TOKEN=YOUR_REAL_SPORTMONKS_TOKEN
 GEMINI_API_KEY=YOUR_REAL_GEMINI_KEY
 PORT=5000
+TRUST_PROXY_HOPS=0
 ```
 
 Файл `.env` исключён из Git. Не добавляйте его в репозиторий.
+
+`TRUST_PROXY_HOPS` оставьте равным `0`, если Node.js принимает запросы напрямую. Если перед приложением настроен один доверенный reverse proxy (например, Nginx), установите `TRUST_PROXY_HOPS=1`. Не включайте доверие к proxy-заголовкам без контролируемого reverse proxy.
 
 Для FPS.ms предпочтительно добавить `GEMINI_API_KEY` как переменную Startup. Если панель не разрешает создавать произвольные переменные, создайте через File Manager файл `gemini-key.txt` в `/home/container` и поместите в него только ключ Gemini. Файл исключён из Git.
 
