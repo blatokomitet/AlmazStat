@@ -6,6 +6,7 @@ on:
     paths:
       - "index.html"
       - "style.css"
+      - "control-room-v2.css"
       - "app.js"
       - "server.js"
       - "lib/**"
@@ -16,6 +17,7 @@ on:
     paths:
       - "index.html"
       - "style.css"
+      - "control-room-v2.css"
       - "app.js"
       - "server.js"
       - "lib/**"
