@@ -1,0 +1,666 @@
+/* AlmazStat Control Room v2
+   Additive visual layer. Keeps existing feature logic intact and makes the
+   generated control-room direction the canonical presentation. */
+
+:root {
+  --cr-bg: #080b0f;
+  --cr-shell: #0d1218;
+  --cr-panel: #111820;
+  --cr-panel-2: #151e27;
+  --cr-panel-3: #1a252f;
+  --cr-border: rgba(201, 255, 226, 0.09);
+  --cr-border-strong: rgba(34, 201, 120, 0.28);
+  --cr-text: #f4f8f6;
+  --cr-muted: #8c9b95;
+  --cr-green: #22e58b;
+  --cr-green-soft: #9af3c4;
+  --cr-red: #ff5b66;
+  --cr-radius: 10px;
+  --cr-shadow: 0 22px 70px rgba(0, 0, 0, 0.38);
+}
+
+body {
+  background:
+    radial-gradient(circle at 65% -10%, rgba(34, 229, 139, 0.10), transparent 30%),
+    linear-gradient(180deg, #07090d, #090d12 46%, #06090c);
+}
+
+.site-shell {
+  border-color: var(--cr-border);
+  background: rgba(8, 12, 17, 0.96);
+}
+
+.desktop-sidebar {
+  background:
+    linear-gradient(180deg, rgba(16, 23, 30, 0.99), rgba(8, 13, 18, 0.99));
+}
+
+.sidebar-brand {
+  margin-bottom: 2px;
+}
+
+.sidebar-brand-mark {
+  width: 34px;
+  height: 34px;
+}
+
+.sidebar-nav a,
+.sidebar-shortcuts > a {
+  transition: background-color 150ms ease, color 150ms ease, transform 150ms ease;
+}
+
+.sidebar-nav a:hover,
+.sidebar-shortcuts > a:hover {
+  transform: translateX(2px);
+}
+
+.sidebar-nav a.active {
+  box-shadow: inset 0 0 0 1px rgba(34, 229, 139, 0.05);
+}
+
+.app {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.008), transparent 180px);
+}
+
+/* Mobile header */
+.header {
+  border-color: var(--cr-border);
+  background: rgba(11, 17, 23, 0.91);
+  backdrop-filter: blur(18px);
+}
+
+.header-actions .status {
+  min-height: 34px;
+  padding: 0 9px;
+  border: 1px solid var(--cr-border);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.025);
+}
+
+/* Home command strip */
+.dashboard-screen {
+  gap: 12px;
+}
+
+.dashboard-intro {
+  position: relative;
+  overflow: hidden;
+  min-height: 144px;
+  padding: 24px;
+  border: 1px solid var(--cr-border);
+  border-radius: var(--cr-radius);
+  background:
+    radial-gradient(circle at 78% 22%, rgba(34, 229, 139, 0.16), transparent 20%),
+    linear-gradient(105deg, rgba(15, 24, 31, 0.99) 0%, rgba(12, 18, 24, 0.98) 55%, rgba(8, 17, 20, 0.98) 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.025);
+}
+
+.dashboard-intro::after {
+  position: absolute;
+  right: 6%;
+  bottom: -82px;
+  width: 290px;
+  height: 220px;
+  border: 1px solid rgba(34, 229, 139, 0.10);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 28px rgba(34, 229, 139, 0.018),
+    0 0 0 62px rgba(34, 229, 139, 0.012);
+  content: "";
+  pointer-events: none;
+}
+
+.dashboard-intro h1 {
+  position: relative;
+  z-index: 1;
+  max-width: 12ch;
+  font-size: clamp(32px, 4.4vw, 58px);
+  line-height: 0.94;
+  letter-spacing: -0.045em;
+}
+
+.dashboard-intro p {
+  position: relative;
+  z-index: 1;
+  max-width: 470px;
+  margin-top: 12px;
+  color: #a7b3ae;
+  font-size: 13px;
+}
+
+.dashboard-intro-tools {
+  position: relative;
+  z-index: 2;
+}
+
+.dashboard-search-link {
+  width: min(330px, 30vw);
+  min-height: 42px;
+  border-color: rgba(255,255,255,0.08);
+  background: rgba(5, 9, 13, 0.62);
+}
+
+.dashboard-intro-meta > a,
+.dashboard-panel-head > a {
+  border-color: var(--cr-border-strong);
+  background: rgba(34, 229, 139, 0.07);
+  color: var(--cr-green-soft);
+}
+
+.dashboard-command-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.dashboard-command-card {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 66px;
+  padding: 10px 12px;
+  border: 1px solid var(--cr-border);
+  border-radius: 9px;
+  background: linear-gradient(145deg, rgba(19, 29, 37, 0.98), rgba(13, 20, 27, 0.98));
+  color: var(--cr-text);
+  transition: border-color 150ms ease, background-color 150ms ease, transform 150ms ease;
+}
+
+.dashboard-command-card:hover {
+  border-color: var(--cr-border-strong);
+  background: rgba(34, 229, 139, 0.055);
+  transform: translateY(-1px);
+}
+
+.dashboard-command-card.is-live {
+  border-color: rgba(34, 229, 139, 0.36);
+  background:
+    linear-gradient(145deg, rgba(20, 78, 55, 0.40), rgba(12, 28, 24, 0.92));
+}
+
+.dashboard-command-icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid rgba(34, 229, 139, 0.18);
+  border-radius: 9px;
+  background: rgba(34, 229, 139, 0.08);
+  color: var(--cr-green);
+}
+
+.dashboard-command-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.dashboard-command-copy {
+  min-width: 0;
+}
+
+.dashboard-command-copy strong,
+.dashboard-command-copy span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-command-copy strong {
+  font-size: 11px;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+
+.dashboard-command-copy span {
+  margin-top: 4px;
+  color: var(--cr-muted);
+  font-size: 10px;
+}
+
+.dashboard-command-card b {
+  color: var(--cr-green);
+  font-family: "Space Mono", monospace;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Three-column control room */
+.dashboard-stage {
+  grid-template-columns: minmax(250px, .86fr) minmax(360px, 1.35fr) minmax(250px, .86fr);
+}
+
+.dashboard-next,
+.dashboard-feature,
+.dashboard-live-panel,
+.dashboard-schedule {
+  border-color: var(--cr-border);
+  background:
+    linear-gradient(180deg, rgba(17, 24, 32, 0.99), rgba(13, 20, 27, 0.99));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.018);
+}
+
+.dashboard-panel-head {
+  min-height: 32px;
+}
+
+.dashboard-panel-head h2 {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .035em;
+}
+
+.dashboard-live-dot {
+  background: var(--cr-green);
+  box-shadow: 0 0 0 3px rgba(34,229,139,.08), 0 0 14px rgba(34,229,139,.38);
+}
+
+.dashboard-feature {
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-feature::before {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 100%, rgba(34, 229, 139, 0.07), transparent 38%);
+  content: "";
+  pointer-events: none;
+}
+
+.dashboard-featured-match {
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-featured-top > b {
+  border: 1px solid rgba(34, 229, 139, 0.22);
+  background: rgba(34, 229, 139, 0.09);
+  color: var(--cr-green-soft);
+}
+
+.dashboard-featured-centre > strong {
+  text-shadow: 0 0 30px rgba(34, 229, 139, 0.08);
+}
+
+.dashboard-featured-match.is-live .dashboard-featured-centre > strong {
+  color: var(--cr-green);
+}
+
+.dashboard-next-match,
+.dashboard-live-match,
+.dashboard-schedule-row {
+  border-bottom-color: rgba(255,255,255,0.055);
+}
+
+.dashboard-next-match:hover,
+.dashboard-live-match:hover,
+.dashboard-schedule-row:hover,
+.dashboard-featured-match:hover {
+  background: rgba(34, 229, 139, 0.055);
+}
+
+.dashboard-next-time,
+.dashboard-live-minute,
+.dashboard-schedule-row.is-live time,
+.dashboard-schedule-row.is-live .dashboard-schedule-score {
+  color: var(--cr-green);
+}
+
+.dashboard-schedule-league-head {
+  background: #19232c;
+}
+
+.dashboard-match-filters button.active {
+  border-color: rgba(34,229,139,.32);
+  background: rgba(34,229,139,.09);
+  color: var(--cr-green-soft);
+}
+
+/* Match centre */
+.analysis-screen .match-card {
+  padding: 20px;
+  border: 1px solid var(--cr-border);
+  border-radius: 10px;
+  background:
+    radial-gradient(circle at 50% -20%, rgba(34,229,139,.10), transparent 42%),
+    linear-gradient(180deg, #111820, #0d141b);
+  box-shadow: none;
+}
+
+.analysis-screen .match-card::after {
+  display: none;
+}
+
+.analysis-screen .league {
+  margin-bottom: 16px;
+  color: var(--cr-green-soft);
+  font-family: "Space Mono", monospace;
+  font-size: 10px;
+}
+
+.analysis-screen .crest {
+  border-color: var(--cr-border);
+  border-radius: 12px;
+  background: #172029;
+}
+
+.analysis-screen .score {
+  font-family: "Space Mono", monospace;
+  font-size: clamp(26px, 5vw, 38px);
+  font-variant-numeric: tabular-nums;
+}
+
+.analysis-screen .fixture-status {
+  color: var(--cr-green-soft);
+}
+
+.tabs {
+  gap: 4px;
+  padding-top: 12px;
+}
+
+.tab {
+  min-height: 40px;
+  border-color: transparent;
+  border-radius: 7px;
+  background: transparent;
+}
+
+.tab:hover {
+  background: rgba(255,255,255,.035);
+  color: var(--cr-text);
+}
+
+.tab.active {
+  border-color: rgba(34,229,139,.20);
+  background: rgba(34,229,139,.10);
+  color: var(--cr-green-soft);
+}
+
+.section {
+  margin-top: 20px;
+}
+
+.section-title {
+  font-size: 15px;
+}
+
+.section-label {
+  font-size: 9px;
+}
+
+.prediction,
+.form-card,
+.list-card,
+.standing-card,
+.fixture-statistics,
+.lineup-team-card,
+.risk,
+.data-detail,
+.team-stat-block,
+.player-context-card,
+.player-row-card,
+.player-career-list {
+  border-color: var(--cr-border);
+  border-radius: 10px;
+  background: var(--cr-panel);
+}
+
+.prediction {
+  background:
+    linear-gradient(135deg, rgba(34,229,139,.08), transparent 45%),
+    var(--cr-panel);
+}
+
+.prediction-main strong,
+.stat-value,
+.risk-score {
+  font-family: "Space Mono", monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Entity/data pages */
+.data-screen {
+  max-width: 1040px;
+}
+
+.placeholder-title,
+.team-hero h1,
+.player-hero h1,
+.news-detail h1 {
+  letter-spacing: -.035em;
+}
+
+.team-hero,
+.player-hero,
+.league-hero,
+.news-detail {
+  border-color: var(--cr-border);
+  border-radius: 10px;
+  background:
+    linear-gradient(145deg, rgba(34,229,139,.055), transparent 42%),
+    var(--cr-panel);
+}
+
+.data-card,
+.news-card,
+.global-leader,
+.team-player,
+.team-fixture-row,
+.team-form-row {
+  border-color: var(--cr-border);
+  border-radius: 9px;
+  background: var(--cr-panel);
+}
+
+.table-scroll {
+  border-color: var(--cr-border);
+  border-radius: 10px;
+}
+
+/* Bottom navigation */
+.bottom {
+  border-top-color: rgba(255,255,255,.08);
+  background: rgba(7, 11, 15, 0.94);
+  backdrop-filter: blur(22px);
+}
+
+.bottom-item {
+  position: relative;
+  color: #7f8c87;
+}
+
+.bottom-item.active {
+  color: var(--cr-green);
+}
+
+.bottom-item.active::before {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 26px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--cr-green);
+  content: "";
+  transform: translateX(-50%);
+}
+
+.bottom-item.active .bottom-icon {
+  color: var(--cr-green);
+}
+
+/* Light theme keeps structure but intentionally removes neon depth. */
+html[data-theme="light"] .dashboard-intro,
+html[data-theme="light"] .dashboard-command-card,
+html[data-theme="light"] .dashboard-next,
+html[data-theme="light"] .dashboard-feature,
+html[data-theme="light"] .dashboard-live-panel,
+html[data-theme="light"] .dashboard-schedule {
+  background: var(--surface);
+}
+
+html[data-theme="light"] .dashboard-command-card.is-live {
+  background: #dff2e7;
+}
+
+html[data-theme="light"] .dashboard-search-link {
+  background: #e5ebe7;
+}
+
+/* Tablet */
+@media (max-width: 1080px) and (min-width: 800px) {
+  .dashboard-command-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-stage {
+    grid-template-columns: minmax(230px, .86fr) minmax(320px, 1.14fr);
+  }
+
+  .dashboard-live-panel {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .dashboard-feature {
+    grid-column: 2;
+  }
+
+  .dashboard-next {
+    grid-column: 1;
+  }
+}
+
+/* Mobile */
+@media (max-width: 799px) {
+  .app {
+    padding-top: max(12px, env(safe-area-inset-top));
+  }
+
+  .dashboard-intro {
+    min-height: auto;
+    padding: 18px 15px;
+  }
+
+  .dashboard-intro::after {
+    right: -110px;
+    bottom: -105px;
+  }
+
+  .dashboard-intro h1 {
+    max-width: 11ch;
+    font-size: clamp(30px, 9vw, 39px);
+  }
+
+  .dashboard-intro p {
+    max-width: 28ch;
+    font-size: 11px;
+  }
+
+  .dashboard-intro-tools {
+    align-self: stretch;
+  }
+
+  .dashboard-command-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .dashboard-command-card {
+    grid-template-columns: 32px minmax(0, 1fr);
+    min-height: 62px;
+    padding: 9px;
+  }
+
+  .dashboard-command-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .dashboard-command-card b {
+    grid-column: 2;
+    margin-top: -5px;
+    font-size: 12px;
+  }
+
+  .dashboard-command-copy strong {
+    font-size: 10px;
+  }
+
+  .dashboard-command-copy span {
+    display: none;
+  }
+
+  .dashboard-stage {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-live-panel {
+    order: 1;
+  }
+
+  .dashboard-feature {
+    order: 2;
+  }
+
+  .dashboard-next {
+    order: 3;
+  }
+
+  .dashboard-feature,
+  .dashboard-next,
+  .dashboard-live-panel,
+  .dashboard-schedule {
+    border-radius: 9px;
+  }
+
+  .dashboard-live-match {
+    min-height: 58px;
+  }
+
+  .analysis-screen .match-card {
+    padding: 15px 12px;
+  }
+
+  .analysis-screen .teams {
+    grid-template-columns: minmax(0,1fr) 72px minmax(0,1fr);
+    gap: 7px;
+  }
+
+  .analysis-screen .crest {
+    width: 52px;
+    height: 52px;
+  }
+
+  .analysis-screen .team-name {
+    font-size: 12px;
+  }
+
+  .analysis-screen .match-time {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 390px) {
+  .dashboard-command-strip {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .dashboard-command-card {
+    min-height: 58px;
+  }
+
+  .dashboard-panel-head h2 {
+    font-size: 12px;
+  }
+}
