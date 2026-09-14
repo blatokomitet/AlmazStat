@@ -502,6 +502,7 @@
     return new Intl.DateTimeFormat(uiLanguage === "en" ? "en-GB" : "ru-RU", {
       hour: "2-digit",
       minute: "2-digit",
+      hourCycle: "h23",
     }).format(date);
   }
 
@@ -3542,7 +3543,7 @@
         </section>
       </div>
       <section class="dashboard-schedule">
-        <div class="dashboard-panel-head"><div><h2>Расписание матчей</h2><p>Сегодня · по соревнованиям</p></div><a data-route="/matches" href="/matches">Открыть матч-центр</a></div>
+        <div class="dashboard-panel-head"><div><h2>Расписание матчей</h2><p>Сегодня · по соревнованиям</p></div><a data-route="/matches" href="/matches">Матч-центр</a></div>
         <div data-dashboard-block="schedule">${dashboardState("Загрузка расписания", "Получаем все матчи игрового дня…")}</div>
       </section>`;
   }
