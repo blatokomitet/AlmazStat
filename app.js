@@ -3492,6 +3492,11 @@
 
   function renderDashboardShell() {
     elements.dashboardScreen.innerHTML = `
+      <nav class="dashboard-mobile-tabs" aria-label="Главная навигация">
+        <a class="active" data-route="/" href="/" aria-current="page">Главная</a>
+        <a data-route="/matches" href="/matches?filter=live">LIVE</a>
+        <a data-route="/news" href="/news">Новости</a>
+      </nav>
       <section class="dashboard-intro">
         <div>
           <h1>${dashboardDayTitle()}</h1>
