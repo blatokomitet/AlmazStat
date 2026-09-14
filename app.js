@@ -499,11 +499,9 @@
     if (!value) return "Нет данных";
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return "Нет данных";
-    return new Intl.DateTimeFormat(uiLanguage === "en" ? "en-GB" : "ru-RU", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hourCycle: "h23",
-    }).format(date);
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${hours}:${minutes}`;
   }
 
   function fixtureStatusLabel(status = {}) {
