@@ -1302,3 +1302,74 @@ html[data-theme="light"] .dashboard-search-link {
     display: none;
   }
 }
+
+
+/* Mobile home parity with approved concept */
+.dashboard-mobile-tabs {
+  display: none;
+}
+
+@media (max-width: 799px) {
+  .dashboard-mobile-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--cr-border);
+    border-radius: 9px;
+    background: rgba(10, 15, 20, 0.92);
+  }
+
+  .dashboard-mobile-tabs a {
+    display: grid;
+    min-height: 36px;
+    place-items: center;
+    border-radius: 7px;
+    color: var(--cr-muted);
+    font-size: 10px;
+    font-weight: 800;
+    text-decoration: none;
+  }
+
+  .dashboard-mobile-tabs a.active {
+    background: rgba(34,229,139,.08);
+    color: var(--cr-green);
+  }
+
+  .dashboard-intro,
+  .dashboard-command-strip,
+  .dashboard-date-switcher {
+    display: none;
+  }
+
+  .dashboard-stage {
+    gap: 10px;
+  }
+
+  .dashboard-live-panel {
+    order: 1;
+  }
+
+  .dashboard-feature {
+    order: 2;
+  }
+
+  .dashboard-next {
+    order: 3;
+  }
+
+  .dashboard-live-panel,
+  .dashboard-feature,
+  .dashboard-next {
+    margin: 0;
+  }
+
+  .dashboard-live-panel .dashboard-panel-head,
+  .dashboard-next .dashboard-panel-head {
+    min-height: 36px;
+  }
+
+  .dashboard-featured-top {
+    min-height: 34px;
+  }
+}
