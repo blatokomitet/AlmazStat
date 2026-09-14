@@ -1293,3 +1293,12 @@ html[data-theme="light"] .dashboard-search-link {
     padding: 10px 11px;
   }
 }
+
+
+/* Mobile IA: avoid repeating the same fixtures twice.
+   "Матчи сегодня" is the primary mobile list; the grouped schedule remains desktop-only. */
+@media (max-width: 799px) {
+  .dashboard-schedule {
+    display: none;
+  }
+}
